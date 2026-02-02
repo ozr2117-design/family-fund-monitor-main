@@ -664,9 +664,9 @@ def main():
                 if zen_mode:
                     display_value_1 = "****"
                 else:
-                    # 使用K格式缩短数字显示
+                    # 使用整数K格式 - 最紧凑显示 (3字符：如-3K)
                     if abs(total_profit) >= 1000:
-                        display_value_1 = f"{total_profit/1000:+.1f}K"
+                        display_value_1 = f"{total_profit/1000:+.0f}K"
                     else:
                         display_value_1 = f"{total_profit:+.0f}"
                 
@@ -686,9 +686,9 @@ def main():
                     delta_display = ""
                 else:
                     if actual_data_ready:
-                        # 使用K格式缩短数字显示
+                        # 使用整数K格式 - 最紧凑显示 (3字符：如-3K)
                         if abs(total_actual_profit) >= 1000:
-                            display_value_2 = f"{total_actual_profit/1000:+.1f}K"
+                            display_value_2 = f"{total_actual_profit/1000:+.0f}K"
                         else:
                             display_value_2 = f"{total_actual_profit:+.0f}"
                         delta_val = total_actual_profit - total_profit
