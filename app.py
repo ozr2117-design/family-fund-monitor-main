@@ -637,8 +637,9 @@ def main():
                         pct = nav_cache[key_name][today_str]
                         total_actual_profit += info.get('holding_value', 0) * pct / 100
 
-                # 布局：4列 (预估额 | 实际额 | 预估率 | 实际率)
-                m_col1, m_col2, m_col3, m_col4 = st.columns([1.5, 1.5, 0.5, 0.5])
+                # 布局：2x2网格 - 给每个指标更多水平空间
+                # 第一行：预估收益 | 实际收益
+                row1_col1, row1_col2 = st.columns(2)
                 
                 # A. 今日预估收益 - 自定义HTML
                 if zen_mode:
@@ -646,13 +647,13 @@ def main():
                 else:
                     display_value_1 = f"{total_profit:+.0f}"
                 
-                m_col1.markdown(f"""
+                row1_col1.markdown(f"""
                 <div style='background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); 
                             border: 1px solid rgba(255, 255, 255, 0.6); padding: 15px 10px; 
                             border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
                             min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
                     <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>今日预估收益</div>
-                    <div style='font-size: 14px; font-weight: 600; color: rgb(49, 51, 63); word-break: break-all; overflow-wrap: anywhere;'>{display_value_1}</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{display_value_1}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -670,26 +671,29 @@ def main():
                         display_value_2 = "💎"
                         delta_display = ""
                 
-                m_col2.markdown(f"""
+                row1_col2.markdown(f"""
                 <div style='background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); 
                             border: 1px solid rgba(255, 255, 255, 0.6); padding: 15px 10px; 
                             border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
                             min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
                     <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>今日实际收益</div>
-                    <div style='font-size: 14px; font-weight: 600; color: rgb(49, 51, 63); word-break: break-all; overflow-wrap: anywhere;'>{display_value_2}</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{display_value_2}</div>
                     {delta_display}
                 </div>
                 """, unsafe_allow_html=True)
 
+                # 第二行：预估收益率 | 实际收益率
+                row2_col1, row2_col2 = st.columns(2)
+                
                 # C. 预估收益率 - 自定义HTML
                 est_yield_rate = (total_profit/total_principal*100) if total_principal > 0 else 0
-                m_col3.markdown(f"""
+                row2_col1.markdown(f"""
                 <div style='background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); 
                             border: 1px solid rgba(255, 255, 255, 0.6); padding: 15px 10px; 
                             border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
                             min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
                     <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>预估收益率</div>
-                    <div style='font-size: 14px; font-weight: 600; color: rgb(49, 51, 63);'>{est_yield_rate:+.2f}%</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{est_yield_rate:+.2f}%</div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -700,13 +704,13 @@ def main():
                 else:
                     display_value_4 = "💎"
                 
-                m_col4.markdown(f"""
+                row2_col2.markdown(f"""
                 <div style='background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); 
                             border: 1px solid rgba(255, 255, 255, 0.6); padding: 15px 10px; 
                             border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
                             min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
                     <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>实际收益率</div>
-                    <div style='font-size: 14px; font-weight: 600; color: rgb(49, 51, 63);'>{display_value_4}</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{display_value_4}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
