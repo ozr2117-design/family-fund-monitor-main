@@ -125,11 +125,30 @@ st.markdown("""
         max-width: none !important;
     }
     
+    
     /* Also reduce metric label font for better space utilization */
     div[data-testid="stMetricLabel"],
     div[data-testid="stMetricLabel"] > *,
     div[data-testid="stMetric"] div[data-testid="stMetricLabel"] {
         font-size: 12px !important;
+    }
+    
+    /* Desktop-specific fixes for metric display */
+    @media (min-width: 768px) {
+        /* Force Streamlit columns to respect width on desktop */
+        div[data-testid="column"] {
+            min-width: 0 !important;
+            flex: 1 1 0 !important;
+        }
+        
+        /* Ensure metric values don't get truncated on desktop */
+        div[data-testid="stMetricValue"],
+        div[data-testid="stMetricValue"] > div {
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            word-break: normal !important;
+        }
     }
     
     /* 6. 基金卡片 & 列表 */
