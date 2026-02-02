@@ -99,11 +99,12 @@ st.markdown("""
     div[role="radiogroup"] [data-testid="stMarkdownContainer"] p { font-size: 14px; font-weight: 500; margin: 0; }
 
     /* 5. 收益率大卡片 */
+    /* 5. 收益率大卡片 */
     div[data-testid="stMetric"] {
         background: rgba(255, 255, 255, 0.65);
         backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.6);
-        padding: 15px 20px;
+        padding: 15px 10px; /* Reduced horizontal padding */
         border-radius: 20px;
         box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
         min-height: 115px !important; 
@@ -111,6 +112,11 @@ st.markdown("""
         display: flex;
         flex-direction: column;
         justify-content: center;
+    }
+    
+    /* Optimize font size for metric values to prevent truncation */
+    div[data-testid="stMetricValue"] {
+        font-size: 24px !important;
     }
     
     /* 6. 基金卡片 & 列表 */
@@ -620,7 +626,7 @@ def main():
 
                 # 布局：4列 (预估额 | 实际额 | 预估率 | 实际率)
                 # 调整比例，给收益率多一点空间，防止截断
-                m_col1, m_col2, m_col3, m_col4 = st.columns([1.1, 1.1, 1, 1])
+                m_col1, m_col2, m_col3, m_col4 = st.columns([1.3, 1.3, 0.7, 0.7])
                 
                 # A. 今日预估收益
                 if zen_mode:
