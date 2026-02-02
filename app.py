@@ -116,7 +116,14 @@ st.markdown("""
     
     /* Optimize font size for metric values to prevent truncation */
     div[data-testid="stMetricValue"] {
-        font-size: 20px !important;
+        font-size: 16px !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+    }
+    
+    /* Also reduce metric label font for better space utilization */
+    div[data-testid="stMetricLabel"] {
+        font-size: 12px !important;
     }
     
     /* 6. 基金卡片 & 列表 */
