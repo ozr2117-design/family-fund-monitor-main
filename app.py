@@ -116,7 +116,7 @@ st.markdown("""
     
     /* Optimize font size for metric values to prevent truncation */
     div[data-testid="stMetricValue"] {
-        font-size: 24px !important;
+        font-size: 20px !important;
     }
     
     /* 6. 基金卡片 & 列表 */
@@ -626,7 +626,7 @@ def main():
 
                 # 布局：4列 (预估额 | 实际额 | 预估率 | 实际率)
                 # 调整比例，给收益率多一点空间，防止截断
-                m_col1, m_col2, m_col3, m_col4 = st.columns([1.3, 1.3, 0.7, 0.7])
+                m_col1, m_col2, m_col3, m_col4 = st.columns([1.5, 1.5, 0.5, 0.5])
                 
                 # A. 今日预估收益
                 if zen_mode:
