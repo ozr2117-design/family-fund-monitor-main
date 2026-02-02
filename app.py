@@ -638,37 +638,77 @@ def main():
                         total_actual_profit += info.get('holding_value', 0) * pct / 100
 
                 # 布局：4列 (预估额 | 实际额 | 预估率 | 实际率)
-                # 调整比例，给收益率多一点空间，防止截断
                 m_col1, m_col2, m_col3, m_col4 = st.columns([1.5, 1.5, 0.5, 0.5])
                 
-                # A. 今日预估收益
+                # A. 今日预估收益 - 自定义HTML
                 if zen_mode:
-                    m_col1.metric("今日预估收益", "****")
+                    display_value_1 = "****"
                 else:
-                    # 需求：去掉下方的绿色涨跌数值，只保留大数字
-                    m_col1.metric("今日预估收益", f"{total_profit:+.2f}")
+                    display_value_1 = f"{total_profit:+.2f}"
+                
+                m_col1.markdown(f"""
+                <div style='background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); 
+                            border: 1px solid rgba(255, 255, 255, 0.6); padding: 15px 10px; 
+                            border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
+                            min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
+                    <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>今日预估收益</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{display_value_1}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-                # B. 今日实际收益
+                # B. 今日实际收益 - 自定义HTML
                 if zen_mode:
-                     m_col2.metric("今日实际收益", "****")
+                    display_value_2 = "****"
+                    delta_display = ""
                 else:
                     if actual_data_ready:
-                        m_col2.metric("今日实际收益", f"{total_actual_profit:+.2f}", delta=f"{total_actual_profit-total_profit:+.0f} 差额")
+                        display_value_2 = f"{total_actual_profit:+.2f}"
+                        delta_val = total_actual_profit - total_profit
+                        delta_color = "#00ab41" if delta_val >= 0 else "#ff2b2b"
+                        delta_display = f"<div style='font-size: 11px; color: {delta_color}; margin-top: 4px;'>{delta_val:+.0f} 差额</div>"
                     else:
-                        # 仅显示钻石，去掉 Pending
-                        m_col2.metric("今日实际收益", "💎")
+                        display_value_2 = "💎"
+                        delta_display = ""
+                
+                m_col2.markdown(f"""
+                <div style='background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); 
+                            border: 1px solid rgba(255, 255, 255, 0.6); padding: 15px 10px; 
+                            border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
+                            min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
+                    <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>今日实际收益</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{display_value_2}</div>
+                    {delta_display}
+                </div>
+                """, unsafe_allow_html=True)
 
-                # C. 预估收益率
+                # C. 预估收益率 - 自定义HTML
                 est_yield_rate = (total_profit/total_principal*100) if total_principal > 0 else 0
-                m_col3.metric("预估收益率", f"{est_yield_rate:+.2f}%")
+                m_col3.markdown(f"""
+                <div style='background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); 
+                            border: 1px solid rgba(255, 255, 255, 0.6); padding: 15px 10px; 
+                            border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
+                            min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
+                    <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>预估收益率</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{est_yield_rate:+.2f}%</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-                # D. 实际收益率
+                # D. 实际收益率 - 自定义HTML
                 if actual_data_ready:
                     act_yield_rate = (total_actual_profit/total_principal*100) if total_principal > 0 else 0
-                    m_col4.metric("实际收益率", f"{act_yield_rate:+.2f}%")
+                    display_value_4 = f"{act_yield_rate:+.2f}%"
                 else:
-                    # 缩短标题，防止截断
-                    m_col4.metric("实际收益率", "💎")
+                    display_value_4 = "💎"
+                
+                m_col4.markdown(f"""
+                <div style='background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); 
+                            border: 1px solid rgba(255, 255, 255, 0.6); padding: 15px 10px; 
+                            border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
+                            min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
+                    <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>实际收益率</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{display_value_4}</div>
+                </div>
+                """, unsafe_allow_html=True)
                 
                 # 2. 💎 持仓列表
                 st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
