@@ -644,7 +644,7 @@ def main():
                 if zen_mode:
                     display_value_1 = "****"
                 else:
-                    display_value_1 = f"{total_profit:+.2f}"
+                    display_value_1 = f"{total_profit:+.0f}"
                 
                 m_col1.markdown(f"""
                 <div style='background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); 
@@ -662,7 +662,7 @@ def main():
                     delta_display = ""
                 else:
                     if actual_data_ready:
-                        display_value_2 = f"{total_actual_profit:+.2f}"
+                        display_value_2 = f"{total_actual_profit:+.0f}"
                         delta_val = total_actual_profit - total_profit
                         delta_color = "#00ab41" if delta_val >= 0 else "#ff2b2b"
                         delta_display = f"<div style='font-size: 11px; color: {delta_color}; margin-top: 4px;'>{delta_val:+.0f} 差额</div>"
