@@ -676,7 +676,7 @@ def main():
                             border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
                             min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
                     <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>今日预估收益</div>
-                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{display_value_1}</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63); overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important;'>{display_value_1}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -704,7 +704,7 @@ def main():
                             border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
                             min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
                     <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>今日实际收益</div>
-                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{display_value_2}</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63); overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important;'>{display_value_2}</div>
                     {delta_display}
                 </div>
                 """, unsafe_allow_html=True)
@@ -720,7 +720,7 @@ def main():
                             border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
                             min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
                     <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>预估收益率</div>
-                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{est_yield_rate:+.2f}%</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63); overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important;'>{est_yield_rate:+.2f}%</div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -737,7 +737,7 @@ def main():
                             border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
                             min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
                     <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>实际收益率</div>
-                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63);'>{display_value_4}</div>
+                    <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63); overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important;'>{display_value_4}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
