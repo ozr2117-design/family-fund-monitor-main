@@ -114,15 +114,21 @@ st.markdown("""
         justify-content: center;
     }
     
-    /* Optimize font size for metric values to prevent truncation */
-    div[data-testid="stMetricValue"] {
+    /* Optimize font size for metric values - Multiple selectors for maximum coverage */
+    div[data-testid="stMetricValue"],
+    div[data-testid="stMetricValue"] > div,
+    div[data-testid="stMetric"] div[data-testid="stMetricValue"],
+    [data-testid="stMetricValue"] * {
         font-size: 16px !important;
         overflow: visible !important;
         text-overflow: clip !important;
+        max-width: none !important;
     }
     
     /* Also reduce metric label font for better space utilization */
-    div[data-testid="stMetricLabel"] {
+    div[data-testid="stMetricLabel"],
+    div[data-testid="stMetricLabel"] > *,
+    div[data-testid="stMetric"] div[data-testid="stMetricLabel"] {
         font-size: 12px !important;
     }
     
