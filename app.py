@@ -606,7 +606,7 @@ def main():
                     action_advice = ""
                     
                     # 1. 🎯 买入
-                    if now_hour < 15 and est < -2.5 and est < bench_val:
+                    if 9 <= now_hour < 15 and est < -2.5 and est < bench_val:
                         signal_type = "BUY"
                         multiplier = 2 if est < -4.0 else 1
                         buy_amt = base_unit * multiplier
@@ -615,7 +615,7 @@ def main():
                         if not signal_msg: signal_msg = "🎯 出现加仓机会"
 
                     # 2. 🔥 止盈
-                    elif now_hour < 15 and est > 3.0 and est > (bench_val + 1.5):
+                    elif 9 <= now_hour < 15 and est > 3.0 and est > (bench_val + 1.5):
                         signal_type = "SELL"
                         signal_desc = f"短期过热：跑赢{bench_name} {abs(est-bench_val):.1f}%"
                         action_advice = "建议卖出: 1/4 持仓"
