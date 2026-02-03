@@ -446,7 +446,7 @@ def main():
     
     with top_col1:
         st.caption(f"{greeting} | {bj_time.strftime('%m-%d %H:%M')}")
-        st.markdown(f"<h2 style='margin-top:-10px; color:#333; letter-spacing:0.5px; font-weight:300'>Family Wealth <span style='font-size:12px; color:#ccc; vertical-align:middle'>build.250204.03</span></h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='margin-top:-10px; color:#333; letter-spacing:0.5px; font-weight:300'>Family Wealth</h2>", unsafe_allow_html=True)
 
     # 🔥 禅模式状态初始化 (默认关闭)
     zen_mode = False
@@ -657,16 +657,17 @@ def main():
                         total_actual_profit += info.get('holding_value', 0) * pct / 100
 
                 # 布局：2x2网格 - 给每个指标更多水平空间
+                # 布局：2x2网格 - 增加间距
                 # 第一行：预估收益 | 实际收益
-                row1_col1, row1_col2 = st.columns(2)
+                row1_col1, row1_col2 = st.columns(2, gap="medium")
                 
                 # A. 今日预估收益 - 自定义HTML
                 if zen_mode:
                     display_value_1 = "****"
                 else:
-                    # 使用整数K格式 - 最紧凑显示 (3字符：如-3K)
+                    # 使用完整数字格式
                     if abs(total_profit) >= 1000:
-                        display_value_1 = f"{total_profit/1000:+.0f}K"
+                        display_value_1 = f"{total_profit:+,.0f}"
                     else:
                         display_value_1 = f"{total_profit:+.0f}"
                 
@@ -686,9 +687,9 @@ def main():
                     delta_display = ""
                 else:
                     if actual_data_ready:
-                        # 使用整数K格式 - 最紧凑显示 (3字符：如-3K)
+                        # 使用完整数字格式
                         if abs(total_actual_profit) >= 1000:
-                            display_value_2 = f"{total_actual_profit/1000:+.0f}K"
+                            display_value_2 = f"{total_actual_profit:+,.0f}"
                         else:
                             display_value_2 = f"{total_actual_profit:+.0f}"
                         delta_val = total_actual_profit - total_profit
@@ -709,8 +710,11 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
 
+                # 增加行间距
+                st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
+
                 # 第二行：预估收益率 | 实际收益率
-                row2_col1, row2_col2 = st.columns(2)
+                row2_col1, row2_col2 = st.columns(2, gap="medium")
                 
                 # C. 预估收益率 - 自定义HTML
                 est_yield_rate = (total_profit/total_principal*100) if total_principal > 0 else 0
