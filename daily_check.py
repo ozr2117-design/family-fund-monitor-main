@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 # ⚙️ 配置区 (记得填回你的 Bark Key)
 # ==========================================
 BARK_URLS = [
-    "https://api.day.app/8BTBArkBatQQdF39JpsBDg/基金提醒/",
+    "https://api.day.app/4479733953f1d051ae38cc2dbabe543cea728753da60ba13120bf49866383388/",
     "https://api.day.app/你的Key2/"
 ]
 PUSHPLUS_TOKEN = "36e8f929dd944cd08d38131e9995b3ad" # 留空则不推送，填入如 "abc123456"
@@ -118,7 +118,7 @@ def main():
         action = ""
         
         # 1. 买入
-        if est < -2.5 and est < bench_val:
+        if est < 100 and est < bench_val:
             multiplier = 2 if est < -4.0 else 1
             buy_amt = base_unit * multiplier
             msg = f"🟢【机会】{short_name} {est:.2f}%\n📉 跑输基准 {abs(est-bench_val):.1f}%\n👉 建议加仓 ¥{buy_amt:,}"
