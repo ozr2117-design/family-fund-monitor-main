@@ -117,7 +117,7 @@ def main():
         action = ""
         
         # 1. 买入
-        if est < 100 and est < bench_val:
+        if est < -2.5 and est < bench_val:
             multiplier = 2 if est < -4.0 else 1
             buy_amt = base_unit * multiplier
             msg = f"🟢【机会】{short_name} {est:.2f}%\n📉 跑输基准 {abs(est-bench_val):.1f}%\n👉 建议加仓 ¥{buy_amt:,}"
