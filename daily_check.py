@@ -10,6 +10,7 @@ BARK_URLS = [
     "https://api.day.app/8BTBArkBatQQdF39JpsBDg/基金提醒/",
     "https://api.day.app/你的Key2/"
 ]
+PUSHPLUS_TOKEN = "" # 留空则不推送，填入如 "abc123456"
 
 LOG_FILE = "signals.md"  # 日记文件名
 
@@ -154,7 +155,22 @@ def main():
                 clean_url = url.rstrip('/')
                 requests.get(f"{clean_url}/{title}/{final_body}?group=fund")
             except: pass
-        print("✅ 推送完成")
+        print("✅ Bark 推送完成")
+
+        # 2. 推送 PushPlus
+        if PUSHPLUS_TOKEN and len(PUSHPLUS_TOKEN) > 5:
+            try:
+                pp_url = "http://www.pushplus.plus/send"
+                pp_data = {
+                    "token": PUSHPLUS_TOKEN,
+                    "title": title,
+                    "content": final_body.replace("\n", "<br>"), # HTML换行
+                    "template": "html"
+                }
+                requests.post(pp_url, json=pp_data)
+                print("✅ PushPlus 推送完成")
+            except Exception as e:
+                print(f"❌ PushPlus 推送失败: {e}")
         
         # 2. 写日记 (仅当有信号时)
         append_to_log(log_entries)
