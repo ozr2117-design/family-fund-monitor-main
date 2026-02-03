@@ -446,7 +446,7 @@ def main():
     
     with top_col1:
         st.caption(f"{greeting} | {bj_time.strftime('%m-%d %H:%M')}")
-        st.markdown(f"<h2 style='margin-top:-10px; color:#333; letter-spacing:0.5px; font-weight:300'>Family Wealth</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='margin-top:-10px; color:#333; letter-spacing:0.5px; font-weight:300'>Family Wealth <span style='font-size:12px; color:#ccc; vertical-align:middle'>build.250204.03</span></h2>", unsafe_allow_html=True)
 
     # 🔥 禅模式状态初始化 (默认关闭)
     zen_mode = False
