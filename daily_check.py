@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 # ⚙️ 配置区 (记得填回你的 Bark Key)
 # ==========================================
 BARK_URLS = [
-    "https://api.day.app/4479733953f1d051ae38cc2dbabe543cea728753da60ba13120bf49866383388/",
+    "https://api.day.app/8BTBArkBatQQdF39JpsBDg/",
     "https://api.day.app/你的Key2/"
 ]
 PUSHPLUS_TOKEN = "36e8f929dd944cd08d38131e9995b3ad" # 留空则不推送，填入如 "abc123456"
