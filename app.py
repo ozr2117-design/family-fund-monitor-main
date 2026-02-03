@@ -606,7 +606,7 @@ def main():
                     action_advice = ""
                     
                     # 1. 🎯 买入
-                    if est < -2.5 and est < bench_val:
+                    if now_hour < 15 and est < -2.5 and est < bench_val:
                         signal_type = "BUY"
                         multiplier = 2 if est < -4.0 else 1
                         buy_amt = base_unit * multiplier
@@ -615,7 +615,7 @@ def main():
                         if not signal_msg: signal_msg = "🎯 出现加仓机会"
 
                     # 2. 🔥 止盈
-                    elif est > 3.0 and est > (bench_val + 1.5):
+                    elif now_hour < 15 and est > 3.0 and est > (bench_val + 1.5):
                         signal_type = "SELL"
                         signal_desc = f"短期过热：跑赢{bench_name} {abs(est-bench_val):.1f}%"
                         action_advice = "建议卖出: 1/4 持仓"
@@ -787,7 +787,7 @@ def main():
                             y_sign = "+" if h_stats['yesterday'] > 0 else ""
                             col_h1.markdown(f"""
                             <div style='background:rgba(255,255,255,0.4); border-radius:8px; padding:8px 12px;'>
-                                <div style='font-size:11px; color:#666'>昨日 ({h_stats['last_date']})</div>
+                                <div style='font-size:11px; color:#666'>({h_stats['last_date']})</div>
                                 <div style='font-size:14px; font-weight:600; color:{y_color}'>{y_sign}¥{yes_profit:,.1f}</div>
                                 <div style='font-size:10px; color:#999'>{y_sign}{h_stats['yesterday']}%</div>
                             </div>
