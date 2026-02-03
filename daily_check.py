@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 # ⚙️ 配置区 (记得填回你的 Bark Key)
 # ==========================================
 BARK_URLS = [
-    "https://api.day.app/8BTBArkBatQQdF39JpsBDg/推送标题/基金开搞！/",
+    "https://api.day.app/8BTBArkBatQQdF39JpsBDg/重要警告?level=critical&volume=5/",
     "https://api.day.app/你的Key2/"
 ]
 
