@@ -10,7 +10,7 @@ BARK_URLS = [
     "https://api.day.app/8BTBArkBatQQdF39JpsBDg/基金提醒/",
     "https://api.day.app/你的Key2/"
 ]
-PUSHPLUS_TOKEN = "" # 留空则不推送，填入如 "abc123456"
+PUSHPLUS_TOKEN = "36e8f929dd944cd08d38131e9995b3ad" # 留空则不推送，填入如 "abc123456"
 
 LOG_FILE = "signals.md"  # 日记文件名
 
