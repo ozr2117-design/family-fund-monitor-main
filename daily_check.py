@@ -131,7 +131,9 @@ def main():
     
     # 🕒 必须在 此时间段内 才发送“收盘估值报告”
     # 比如 14:45 - 15:15
-    now = datetime.now()
+    # GitHub Action 跑在 UTC，需+8小时转为北京时间
+    bj_time = datetime.utcnow() + timedelta(hours=8)
+    now = bj_time
     is_market_close_window = (now.hour == 14 and now.minute >= 45) or (now.hour == 15 and now.minute <= 15)
     
     report_lines = []
