@@ -299,6 +299,7 @@ def get_realtime_price(stock_codes):
         return price_data
     except: return None
 
+@st.cache_data(ttl=3600)
 def get_official_nav(fund_code):
     url = f"https://api.fund.eastmoney.com/f10/lsjz?fundCode={fund_code}&pageIndex=1&pageSize=1"
     headers = {
@@ -319,6 +320,7 @@ def get_official_nav(fund_code):
 
 # === 📈 历史数据与趋势分析 (Auto-Fetch) ===
 
+@st.cache_data(ttl=3600*4)
 def fetch_fund_history(fund_code, limit=20):
     """从天天基金接口抓取历史净值"""
     timestamp = int(time.time() * 1000)
