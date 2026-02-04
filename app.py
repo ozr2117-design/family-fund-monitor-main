@@ -835,7 +835,7 @@ def main():
                         
                         kc1.markdown(f"""
                         <div class='detail-box'>
-                            <div style='font-size:12px; color:#888; margin-bottom:2px'>今日盈亏</div>
+                            <div style='font-size:12px; color:#888; margin-bottom:2px'>今日预估盈亏</div>
                             <div style='font-size:20px; font-weight:600; color:{color_code}; font-family:-apple-system'>{profit_display}</div>
                             <div style='height:15px'></div>
                             <div style='font-size:12px; color:#888; margin-bottom:2px'>本金</div>
