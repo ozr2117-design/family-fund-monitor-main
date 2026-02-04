@@ -4,19 +4,26 @@ import os
 from datetime import datetime, timedelta
 
 # ==========================================
-# ⚙️ 配置区 (记得填回你的 Bark Key)
+# ⚙️ 配置区 (安全升级版)
 # ==========================================
-BARK_URLS = [
-    "https://api.day.app/8BTBArkBatQQdF39JpsBDg/",
-    "https://api.day.app/你的Key2/"
-]
-PUSHPLUS_TOKEN = "36e8f929dd944cd08d38131e9995b3ad" # 留空则不推送，填入如 "abc123456"
+def load_secrets():
+    # 1. 尝试从环境变量读取 (GitHub Secrets)
+    bark = os.getenv("BARK_KEY")
+    pp = os.getenv("PUSHPLUS_TOKEN")
+    
+    # 2. 尝试从本地文件读取
+    if not bark or not pp:
+        try:
+            if os.path.exists('secrets.json'):
+                with open('secrets.json', 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if not bark: bark = data.get("BARK_URL") or data.get("BARK_KEY")
+                    if not pp: pp = data.get("PUSHPLUS_TOKEN")
+        except: pass
 
-LOG_FILE = "signals.md"  # 日记文件名
+    return bark, pp
 
-# ==========================================
-# 🛠️ 核心逻辑区
-# ==========================================
+BARK_KEY, PUSHPLUS_TOKEN = load_secrets()
 
 def load_funds():
     try:
@@ -61,6 +68,7 @@ def append_to_log(log_entries):
         
     try:
         # 读取现有内容
+        LOG_FILE = "signals.md"
         with open(LOG_FILE, 'r', encoding='utf-8') as f:
             lines = f.readlines()
             
@@ -83,17 +91,18 @@ def append_to_log(log_entries):
         print(f"❌ 写日记失败: {e}")
 
 # ==========================================
-# 🚀 主程序
+# 🛠️ 核心功能函数
 # ==========================================
 def send_message(title, content):
     """统一发送通知 (Bark + PushPlus)"""
-    print(f"🔔 准备发送通知: {title}")
+    print(f"[MSG] 准备发送通知: {title}")
     
     # 1. Push Bark
-    for url in BARK_URLS:
-        if "你的Key" in url: continue
+    if BARK_KEY:
         try:
-            clean_url = url.rstrip('/')
+            # 兼容完整URL或纯Key
+            base_url = BARK_KEY if BARK_KEY.startswith("http") else f"https://api.day.app/{BARK_KEY}/"
+            clean_url = base_url.rstrip('/')
             requests.get(f"{clean_url}/{title}/{content}?group=fund")
         except: pass
     
@@ -116,6 +125,9 @@ def send_message(title, content):
 # ==========================================
 def main():
     print(">>> 开始执行巡检...")
+    if not BARK_KEY and not PUSHPLUS_TOKEN:
+        print("[!] 未找到推送配置 (Env或secrets.json)，仅本地运行")
+
     funds = load_funds()
     if not funds: return
     
@@ -130,11 +142,11 @@ def main():
     log_entries = [] # 专门用于写日记的数据结构
     
     # 🕒 必须在 此时间段内 才发送“收盘估值报告”
-    # 比如 14:45 - 15:15
+    # 目标：15:15 | 范围放宽: 15:00 - 15:30
     # GitHub Action 跑在 UTC，需+8小时转为北京时间
     bj_time = datetime.utcnow() + timedelta(hours=8)
     now = bj_time
-    is_market_close_window = (now.hour == 14 and now.minute >= 45) or (now.hour == 15 and now.minute <= 15)
+    is_market_close_window = (now.hour == 15 and 0 <= now.minute <= 30)
     
     report_lines = []
     total_est_profit = 0
@@ -204,11 +216,11 @@ def main():
     # 📢 2. 发送收盘估值报告 (特定时间段)
     # ---------------------------
     if is_market_close_window:
-        print("📊 正在生成收盘估值报告...")
+        print("[REPORT] 正在生成收盘估值报告...")
         title = f"收盘估值播报 {datetime.now().strftime('%H:%M')}"
         body = f"📅 {datetime.now().strftime('%Y-%m-%d')}\n\n" + "\n".join(report_lines)
         send_message(title, body)
-        print("✅ 估值报告已推送")
+        print("[OK] 估值报告已推送")
     else:
         print(f"非收盘报告时间 (当前 {now.strftime('%H:%M')})")
 

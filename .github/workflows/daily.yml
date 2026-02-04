@@ -2,7 +2,7 @@ name: Fund Sentinel (Daily Check)
 
 on:
   schedule:
-    - cron: '45 6 * * 1-5'
+    - cron: '15 7 * * 1-5' # 07:15 UTC = 15:15 Beijing
   workflow_dispatch:
 
 # 🔥 核心变化1：赋予写入仓库的权限
@@ -26,6 +26,9 @@ jobs:
         run: pip install requests
           
       - name: Run Sentinel Script
+        env:
+          BARK_KEY: ${{ secrets.BARK_KEY }}
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
         run: python daily_check.py
         
       # 🔥 核心变化2：如果日记文件被修改了，把它提交回仓库
