@@ -9,13 +9,27 @@ from datetime import datetime
 sys.stdout.reconfigure(encoding='utf-8')
 
 # ==========================================
-# ⚙️ 配置区
+# ⚙️ 配置区 (安全升级版)
 # ==========================================
-# 从 daily_check.py 拿到的配置
-BARK_URLS = [
-    "https://api.day.app/8BTBArkBatQQdF39JpsBDg/",
-]
-PUSHPLUS_TOKEN = "36e8f929dd944cd08d38131e9995b3ad" # 用户没有设置Token，这里留空，如有需要请手动填入
+def load_secrets():
+    # 1. 尝试从环境变量读取 (GitHub Secrets)
+    bark = os.getenv("BARK_KEY")
+    pp = os.getenv("PUSHPLUS_TOKEN")
+    
+    # 2. 尝试从本地文件读取
+    if not bark or not pp:
+        try:
+            if os.path.exists('secrets.json'):
+                with open('secrets.json', 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if not bark: bark = data.get("BARK_URL") or data.get("BARK_KEY")
+                    if not pp: pp = data.get("PUSHPLUS_TOKEN")
+        except: pass
+
+    return bark, pp
+
+BARK_KEY, PUSHPLUS_TOKEN = load_secrets()
+# 下面的 BARK_URLS 仅作为旧版兼容，如果不为空且 BARK_KEY 为空，可以尝试使用（这里简化逻辑，直接覆盖）
 
 FUND_CODES_MAP = {
     '摩根均衡C (梁鹏/周期)': '021274',
@@ -69,30 +83,26 @@ def get_official_nav(fund_code):
     return None, None
 
 def send_notification(title, content):
-    """发送通知"""
-    print(f"🔔 准备发送通知: {title}")
+    """统一发送通知 (Bark + PushPlus)"""
+    print(f"[MSG] 准备发送通知: {title}")
     
-    # 1. Bark
-    for url in BARK_URLS:
+    # 1. Push Bark
+    if BARK_KEY:
         try:
-            clean_url = url.rstrip('/')
-            # Bark不支持过长URL，做简单编码或截断如果是GET请求。
-            # 这里直接拼接，注意content可能需要URL编码，requests会自动处理params但这里是在path里
-            # 为了安全简单，直接用requests.get(url + /title/content) 可能有编码问题
-            # 建议使用 params
-            base_url = "https://api.day.app/8BTBArkBatQQdF39JpsBDg/" # 提取Key
-            requests.get(f"{base_url}{title}/{content}?group=fund")
-        except Exception as e:
-            print(f"Bark Error: {e}")
+            # 兼容完整URL或纯Key
+            base_url = BARK_KEY if BARK_KEY.startswith("http") else f"https://api.day.app/{BARK_KEY}/"
+            clean_url = base_url.rstrip('/')
+            requests.get(f"{clean_url}/{title}/{content}?group=fund")
+        except: pass
 
-    # 2. PushPlus
-    if PUSHPLUS_TOKEN:
+    # 2. Push PushPlus
+    if PUSHPLUS_TOKEN and len(PUSHPLUS_TOKEN) > 5:
         try:
             pp_url = "http://www.pushplus.plus/send"
             pp_data = {
                 "token": PUSHPLUS_TOKEN,
                 "title": title,
-                "content": content.replace('\n', '<br>'),
+                "content": content.replace("\n", "<br>"), # HTML换行
                 "template": "html"
             }
             requests.post(pp_url, json=pp_data)
@@ -105,27 +115,33 @@ def send_notification(title, content):
 
 def run_check():
     print("🌙 Nightly Check Started...")
-    print("正在等待基金净值更新 (按 Ctrl+C 停止)...")
     
     funds_config = load_json('funds.json')
     nav_cache = load_json('nav_history.json')
     
-    # 目标日期：默认为今天
-    # 如果是凌晨0点-早上8点跑，可能想查的是“昨天”的净值？
-    # 假设用户是在当天晚上跑，查“今天”的
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    print(f"📅 目标日期: {today_str}")
+    # 时区修正：GitHub Action 跑在 UTC，需+8小时转为北京时间
+    # 无论是本地还是云端，统一用这个“北京时间”对象来判断
+    bj_now = datetime.utcnow() + timedelta(hours=8)
+    today_str = bj_now.strftime("%Y-%m-%d")
+    print(f"📅 目标日期: {today_str} (当前时间: {bj_now.strftime('%H:%M')})")
 
     # ==========================
     # 🕒 等待逻辑：直到晚上 20:00
     # ==========================
     while True:
-        now = datetime.now()
+        # 刷新时间
+        bj_now = datetime.utcnow() + timedelta(hours=8)
+        
         # 如果是下午或晚上，且不到20点，就等待
-        if now.hour >= 12 and now.hour < 20:
-            minutes_to_wait = (20 - now.hour) * 60 - now.minute
-            print(f"[{now.strftime('%H:%M')}] 也就是晚上8点才更新，我先歇会儿... 还有 {minutes_to_wait} 分钟")
-            time.sleep(60 * 10) # 每10分钟看一眼时间
+        # 范围：12:00 <= T < 20:00
+        if bj_now.hour >= 12 and bj_now.hour < 20:
+            minutes_to_wait = (20 - bj_now.hour) * 60 - bj_now.minute
+            print(f"[{bj_now.strftime('%H:%M')}] 也就是晚上8点才更新，我先歇会儿... 还有 {minutes_to_wait} 分钟")
+            
+            # 如果剩余时间很多，就睡久点；如果不到了，睡短点
+            sleep_sec = 60 * 10 
+            if minutes_to_wait < 10: sleep_sec = 60
+            time.sleep(sleep_sec) 
         else:
             break
             

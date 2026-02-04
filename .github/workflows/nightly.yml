@@ -1,0 +1,40 @@
+name: Nightly Net Value Update
+
+on:
+  schedule:
+    - cron: '0 12 * * 1-5' # 12:00 UTC = 20:00 Beijing
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  nightly_scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360 # Allow running up to 6 hours (Wait for data)
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          
+      - name: Install dependencies
+        run: pip install requests
+          
+      - name: Run Nightly Script
+        env:
+          BARK_KEY: ${{ secrets.BARK_KEY }}
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+        run: python nightly_check.py
+        
+      - name: Commit Updated NAV
+        run: |
+          git config --global user.name "FundBot"
+          git config --global user.email "bot@github.com"
+          git add nav_history.json
+          git commit -m "🌙 Update NAV history" || echo "No changes to commit"
+          git push
