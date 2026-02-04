@@ -85,6 +85,35 @@ def append_to_log(log_entries):
 # ==========================================
 # 🚀 主程序
 # ==========================================
+def send_message(title, content):
+    """统一发送通知 (Bark + PushPlus)"""
+    print(f"🔔 准备发送通知: {title}")
+    
+    # 1. Push Bark
+    for url in BARK_URLS:
+        if "你的Key" in url: continue
+        try:
+            clean_url = url.rstrip('/')
+            requests.get(f"{clean_url}/{title}/{content}?group=fund")
+        except: pass
+    
+    # 2. Push PushPlus
+    if PUSHPLUS_TOKEN and len(PUSHPLUS_TOKEN) > 5:
+        try:
+            pp_url = "http://www.pushplus.plus/send"
+            pp_data = {
+                "token": PUSHPLUS_TOKEN,
+                "title": title,
+                "content": content.replace("\n", "<br>"), # HTML换行
+                "template": "html"
+            }
+            requests.post(pp_url, json=pp_data)
+        except Exception as e:
+            print(f"❌ PushPlus 推送失败: {e}")
+
+# ==========================================
+# 🚀 主程序
+# ==========================================
 def main():
     print(">>> 开始执行巡检...")
     funds = load_funds()
@@ -100,6 +129,14 @@ def main():
     messages = []
     log_entries = [] # 专门用于写日记的数据结构
     
+    # 🕒 必须在 此时间段内 才发送“收盘估值报告”
+    # 比如 14:45 - 15:15
+    now = datetime.now()
+    is_market_close_window = (now.hour == 14 and now.minute >= 45) or (now.hour == 15 and now.minute <= 15)
+    
+    report_lines = []
+    total_est_profit = 0
+    
     for name, info in funds.items():
         factor = info.get('factor', 1.0)
         base_unit = info.get('base_unit', 1000)
@@ -111,6 +148,10 @@ def main():
         est = (val / w * factor) if w > 0 else 0
         bench_val = get_benchmark_pct(name, market_data)
         short_name = name.split('(')[0]
+
+        # 收集报告数据 (无论是否触发信号)
+        icon = "🔴" if est > 0 else "🟢" if est < 0 else "⚪"
+        report_lines.append(f"{icon} {short_name}: {est:+.2f}%")
 
         # 信号判断
         signal_type = None
@@ -144,39 +185,30 @@ def main():
                 "action": "卖出 1/4"
             })
 
-    # 执行操作
+    # ---------------------------
+    # 📢 1. 发送交易信号 (优先级最高)
+    # ---------------------------
     if messages:
-        # 1. 推送 Bark
         final_body = "\n\n".join(messages)
-        title = "基金信号提醒"
-        for url in BARK_URLS:
-            if "你的Key" in url: continue
-            try:
-                clean_url = url.rstrip('/')
-                requests.get(f"{clean_url}/{title}/{final_body}?group=fund")
-            except: pass
-        print("✅ Bark 推送完成")
-
-        # 2. 推送 PushPlus
-        if PUSHPLUS_TOKEN and len(PUSHPLUS_TOKEN) > 5:
-            try:
-                pp_url = "http://www.pushplus.plus/send"
-                pp_data = {
-                    "token": PUSHPLUS_TOKEN,
-                    "title": title,
-                    "content": final_body.replace("\n", "<br>"), # HTML换行
-                    "template": "html"
-                }
-                requests.post(pp_url, json=pp_data)
-                print("✅ PushPlus 推送完成")
-            except Exception as e:
-                print(f"❌ PushPlus 推送失败: {e}")
+        send_message("基金信号提醒", final_body)
+        print("✅ 交易信号已推送")
         
-        # 2. 写日记 (仅当有信号时)
+        # 写日记
         append_to_log(log_entries)
-        
     else:
-        print("今日无信号")
+        print("今日无交易信号")
+
+    # ---------------------------
+    # 📢 2. 发送收盘估值报告 (特定时间段)
+    # ---------------------------
+    if is_market_close_window:
+        print("📊 正在生成收盘估值报告...")
+        title = f"收盘估值播报 {datetime.now().strftime('%H:%M')}"
+        body = f"📅 {datetime.now().strftime('%Y-%m-%d')}\n\n" + "\n".join(report_lines)
+        send_message(title, body)
+        print("✅ 估值报告已推送")
+    else:
+        print(f"非收盘报告时间 (当前 {now.strftime('%H:%M')})")
 
 if __name__ == "__main__":
     main()
