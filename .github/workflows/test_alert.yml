@@ -1,0 +1,86 @@
+name: Test Notification (Manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          
+      - name: Install requests
+        run: pip install requests
+
+      - name: Debug and Send
+        env:
+          BARK_KEY: ${{ secrets.BARK_KEY }}
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+        run: |
+          python -c "
+          import os, requests, sys
+          
+          print('--- Environment Debug ---')
+          # Reveal first/last chars to verify the secret is injected (without showing full key)
+          bark = os.getenv('BARK_KEY')
+          pp = os.getenv('PUSHPLUS_TOKEN')
+          
+          if bark and len(bark) > 4: 
+              print(f'✅ BARK_KEY found: {bark[:2]}***{bark[-2:]} (Length: {len(bark)})')
+          elif bark:
+              print(f'✅ BARK_KEY found (Too short to mask): {len(bark)} chars')
+          else: 
+              print('❌ BARK_KEY is EMPTY')
+          
+          if pp and len(pp) > 4: 
+              print(f'✅ PUSHPLUS_TOKEN found: {pp[:2]}***{pp[-2:]} (Length: {len(pp)})')
+          elif pp:
+              print(f'✅ PUSHPLUS_TOKEN found (Too short to mask): {len(pp)} chars')
+          else: 
+              print('❌ PUSHPLUS_TOKEN is EMPTY')
+          
+          print('\n--- Sending Test ---')
+          
+          # Send Bark
+          if bark:
+              try:
+                  print(f'Attempting Bark Push...')
+                  base_url = bark if bark.startswith('http') else f'https://api.day.app/{bark}/'
+                  clean_url = base_url.rstrip('/')
+                  url = f'{clean_url}/Test/GitHub_Action_Test_Message?group=test'
+                  
+                  # Masking URL in logs
+                  safe_url_log = url.replace(bark, '***')
+                  print(f'Request URL: {safe_url_log}')
+                  
+                  r = requests.get(url, timeout=10)
+                  print(f'Bark Status: {r.status_code}')
+                  print(f'Bark Response: {r.text}')
+              except Exception as e: print(f'❌ Bark Failed: {e}')
+          else:
+              print('Skipping Bark (No Key)')
+              
+          # Send PushPlus
+          if pp:
+              try:
+                  print(f'Attempting PushPlus...')
+                  url = 'http://www.pushplus.plus/send'
+                  data = {
+                      'token': pp, 
+                      'title': 'Test Notification', 
+                      'content': '🎉 Congratulations! Your GitHub Secrets are working correctly.',
+                      'template': 'html'
+                  }
+                  r = requests.post(url, json=data, timeout=10)
+                  print(f'PushPlus Status: {r.status_code}')
+                  print(f'PushPlus Response: {r.text}')
+              except Exception as e: print(f'❌ PushPlus Failed: {e}')
+          else:
+              print('Skipping PushPlus (No Token)')
+          "
