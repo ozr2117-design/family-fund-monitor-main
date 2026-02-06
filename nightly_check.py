@@ -149,20 +149,23 @@ def run_check():
 
     while True:
         updated_count = 0
-        total_funds = len(funds_config)
+        
+        # 过滤出有代码映射的基金（防止 funds.json 里有新基金但代码未配，导致死循环）
+        target_funds = [k for k in funds_config.keys() if k in FUND_CODES_MAP]
+        total_funds = len(target_funds)
         updates_info = [] # 存储更新详情
         
         current_time = datetime.now().strftime("%H:%M:%S")
-        print(f"[{current_time}] 正在轮询接口...", end="\r")
+        print(f"[{current_time}] 正在轮询接口 (监控 {total_funds} 只基金)...", end="\r")
 
         # 重新读取缓存，防止多进程写冲突（虽然本地一般单进程）
-        nav_cache = load_json('nav_history.json') # Reload to be safe
+        nav_cache = load_json('nav_history.json') 
         
         need_save = False
 
-        for name, info in funds_config.items():
+        for name in target_funds:
+            info = funds_config[name]
             code = FUND_CODES_MAP.get(name)
-            if not code: continue
             
             # 检查该基金今天是否已更新
             key_name = name

@@ -142,11 +142,12 @@ def main():
     log_entries = [] # 专门用于写日记的数据结构
     
     # 🕒 必须在 此时间段内 才发送“收盘估值报告”
-    # 目标：15:15 | 范围放宽: 15:00 - 15:30
+    # 目标：15:15 | 范围放宽: 15:00 - 16:30 (应对 GitHub Actions 延迟)
     # GitHub Action 跑在 UTC，需+8小时转为北京时间
     bj_time = datetime.utcnow() + timedelta(hours=8)
     now = bj_time
-    is_market_close_window = (now.hour == 15 and 0 <= now.minute <= 30)
+    # 只要是 15点，或者 16点30分之前，都允许发送 (防止排队太久导致错过)
+    is_market_close_window = (now.hour == 15) or (now.hour == 16 and now.minute <= 30)
     
     report_lines = []
     total_est_profit = 0
