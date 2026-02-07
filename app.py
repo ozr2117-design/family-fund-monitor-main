@@ -805,38 +805,32 @@ def main():
                             st.markdown(pill_html, unsafe_allow_html=True)
                         
                         # ----------------------------------------------------
-                        # 📊 历史数据看板 (NEW)
+                        # 📊 历史数据看板 (Redesigned: Flat & Compact)
                         # ----------------------------------------------------
                         h_stats = card['h_stats']
                         yes_profit = card['yes_profit']
                         
                         if h_stats['last_date'] != "-":
-                            col_h1, col_h2 = st.columns(2)
-                            
-                            # 昨日盈亏
+                            # 准备数据
                             y_color = "#d93025" if h_stats['yesterday'] > 0 else "#1e8e3e"
                             y_sign = "+" if h_stats['yesterday'] > 0 else ""
-                            col_h1.markdown(f"""
-                            <div style='background:rgba(255,255,255,0.4); border-radius:8px; padding:8px 12px;'>
-                                <div style='font-size:11px; color:#666'>({h_stats['last_date']})</div>
-                                <div style='font-size:14px; font-weight:600; color:{y_color}'>{y_sign}¥{yes_profit:,.1f}</div>
-                                <div style='font-size:10px; color:#999'>{y_sign}{h_stats['yesterday']}%</div>
-                            </div>
-                            """, unsafe_allow_html=True)
                             
-                            # 连涨连跌
                             s_icon = "🔥" if h_stats['streak_type'] == "up" else "🥶" if h_stats['streak_type'] == "down" else "😐"
                             s_text = f"{h_stats['streak']}连涨" if h_stats['streak_type'] == "up" else f"{h_stats['streak']}连跌" if h_stats['streak_type'] == "down" else "平盘"
-                            s_bg = "#fff2f0" if h_stats['streak_type'] == "up" else "#f6ffed" if h_stats['streak_type'] == "down" else "#f5f5f5"
-                            s_color = "#cf1322" if h_stats['streak_type'] == "up" else "#389e0d" if h_stats['streak_type'] == "down" else "#666"
                             
-                            col_h2.markdown(f"""
-                            <div style='background:{s_bg}; border-radius:8px; padding:8px 12px; height:100%; display:flex; align-items:center;'>
-                                <div style='font-size:13px; font-weight:600; color:{s_color}'>
+                            # 扁平化展示：日期 + 金额 + 幅度 + 连涨连跌
+                            # 字体大小保持一致 (12px-13px)
+                            flat_html = f"""
+                            <div style='display:flex; align-items:center; margin-top: 6px; margin-bottom: 2px; font-size: 13px; font-family: -apple-system;'>
+                                <span style='color:#999; margin-right: 8px;'>({h_stats['last_date']})</span>
+                                <span style='color:{y_color}; font-weight:600; margin-right: 8px;'>{y_sign}¥{yes_profit:,.1f}</span>
+                                <span style='color:{y_color}; margin-right: 12px;'>{y_sign}{h_stats['yesterday']}%</span>
+                                <span style='background:#f5f5f5; color:#666; padding: 2px 6px; border-radius: 4px; font-size: 12px;'>
                                     {s_icon} {s_text}
-                                </div>
+                                </span>
                             </div>
-                            """, unsafe_allow_html=True)
+                            """
+                            st.markdown(flat_html, unsafe_allow_html=True)
                         
                         st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
                         # ----------------------------------------------------
