@@ -459,19 +459,42 @@ def main():
             if (930 <= t_val <= 1130) or (1300 <= t_val <= 1500):
                 is_trading = True
         
-        status_text = "当前交易中，请坐好扶稳！" if is_trading else "休市中，叹杯茶啦！"
-        # 交易中：浅红/红字 (提醒) or 浅绿/绿字 (安全?) -> 股市通常红涨绿跌，或者用动态。
-        # 这里用中性色或用户习惯偏好。
-        # 交易中: 蓝色提示 (Active), 休市: 灰色 (Inactive)
-        bg_color = "#e3f2fd" if is_trading else "#f1f3f4"
-        text_color = "#0d47a1" if is_trading else "#5f6368"
-        
+        # 🌟 交易状态胶囊 (美化版 Glassmorphism)
+        if is_trading:
+            # 交易中：活跃蓝
+            pill_style = """
+                background: rgba(227, 242, 253, 0.6);
+                color: #1565c0;
+                border: 1px solid rgba(255, 255, 255, 0.6);
+                backdrop-filter: blur(5px);
+            """
+            icon = "⚡" 
+        else:
+            # 休市中：优雅灰/暖色 (茶)
+            pill_style = """
+                background: rgba(245, 245, 247, 0.6);
+                color: #666;
+                border: 1px solid rgba(255, 255, 255, 0.6);
+                backdrop-filter: blur(5px);
+            """
+            icon = "☕"
+
         st.markdown(f"""
-        <div style="display: flex; align-items: center;">
-            <h2 style='margin-top:-10px; margin-bottom: 0; color:#333; letter-spacing:0.5px; font-weight:300'>Family Wealth</h2>
-            <span style='margin-left: 10px; margin-top: -8px; background-color: {bg_color}; color: {text_color}; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500;'>
-                {status_text}
-            </span>
+        <div style="display: flex; align-items: center; margin-top: -2px;">
+            <h2 style='margin: 0; color:#333; letter-spacing:0.5px; font-weight:300; font-size: 28px;'>Family Wealth</h2>
+            <div style='
+                margin-left: 12px; 
+                padding: 4px 10px; 
+                border-radius: 20px; 
+                font-size: 11px; 
+                font-weight: 500; 
+                letter-spacing: 0.5px;
+                display: flex; align-items: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+                {pill_style}
+            '>
+                <span style='margin-right: 4px; font-size: 10px;'>{icon}</span> {status_text}
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -805,19 +828,19 @@ def main():
                         s_icon = "🔥" if h_stats['streak_type'] == "up" else "🥶" if h_stats['streak_type'] == "down" else "😐"
                         s_text = f"{h_stats['streak']}连涨" if h_stats['streak_type'] == "up" else f"{h_stats['streak']}连跌" if h_stats['streak_type'] == "down" else "平盘"
                         
-                        # 构造标题栏后缀信息 (增加间距与对齐)
-                        # 格式: 2月6日 实际净值   浮盈¥ 6,527   +1.47%   🔥1连涨
+                        # 构造标题栏后缀信息 (移动端优化版)
+                        # 旧: 2月6日 实际净值   浮盈¥ 6,527   +1.47%   🔥1连涨 (太长)
+                        # 新:    02-06  +1.47%  +¥6,527  🔥1连涨 (紧凑)
                         
                         abs_profit = abs(yes_profit)
                         y_sign_pct = "+" if h_stats['yesterday'] > 0 else "" 
-                        
-                        # 数据对齐优化 (使用空格填充)
-                        # 金额: 预留7位字符宽 (例如 "  6,527")
-                        amount_str = f"{abs_profit:,.0f}".rjust(7)
-                        # 幅度: 预留7位字符宽 (例如 " +1.47%")
-                        pct_str = f"{y_sign_pct}{h_stats['yesterday']}%".rjust(7)
+                        y_sign_money = "+" if yes_profit > 0 else "-"
 
-                        yesterday_info = f"　　{date_str}　{p_desc}¥{amount_str}　{pct_str}　{s_icon}{s_text}"
+                        # 日期: 02-06
+                        date_short = date_str if len(date_str) < 6 else h_stats['last_date'][5:]
+                        
+                        # 核心数据: 紧凑格式，去除大量空格
+                        yesterday_info = f"   {date_short}  {y_sign_pct}{h_stats['yesterday']}%  {y_sign_money}¥{abs_profit:,.0f}  {s_icon}{s_text}"
 
                     title = f"{icon} {card['name']}{title_suffix}{yesterday_info}"
                     
