@@ -656,7 +656,7 @@ def main():
                         if not signal_msg: signal_msg = "🔥 出现止盈机会"
 
                     cards_data.append({
-                        "name": name.split('(')[0],
+                        "name": name.split('(')[0].strip(),
                         "full_name": name, # 保留全名用于匹配胶囊
                         "est": est,
                         "profit": profit,
