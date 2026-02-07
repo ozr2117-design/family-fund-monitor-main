@@ -463,42 +463,24 @@ def main():
         if is_trading:
             # 交易中：活跃蓝
             status_text = "交易中"
-            pill_style = """
-                background: rgba(227, 242, 253, 0.6);
-                color: #1565c0;
-                border: 1px solid rgba(255, 255, 255, 0.6);
-                backdrop-filter: blur(5px);
-            """
+            # CSS compacted to avoid indentation issues
+            pill_style = "background: rgba(227, 242, 253, 0.6); color: #1565c0; border: 1px solid rgba(255, 255, 255, 0.6); backdrop-filter: blur(5px);"
             icon = "⚡" 
         else:
             # 休市中：优雅灰/暖色 (茶)
             status_text = "休市中"
-            pill_style = """
-                background: rgba(245, 245, 247, 0.6);
-                color: #666;
-                border: 1px solid rgba(255, 255, 255, 0.6);
-                backdrop-filter: blur(5px);
-            """
+            pill_style = "background: rgba(245, 245, 247, 0.6); color: #666; border: 1px solid rgba(255, 255, 255, 0.6); backdrop-filter: blur(5px);"
             icon = "☕"
 
+        # NOTE: Indentation removed to prevent Markdown Code Block rendering
         st.markdown(f"""
-        <div style="display: flex; align-items: center; margin-top: -2px;">
-            <h2 style='margin: 0; color:#333; letter-spacing:0.5px; font-weight:300; font-size: 28px;'>Family Wealth</h2>
-            <div style='
-                margin-left: 12px; 
-                padding: 4px 10px; 
-                border-radius: 20px; 
-                font-size: 11px; 
-                font-weight: 500; 
-                letter-spacing: 0.5px;
-                display: flex; align-items: center;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-                {pill_style}
-            '>
-                <span style='margin-right: 4px; font-size: 10px;'>{icon}</span> {status_text}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+<div style="display: flex; align-items: center; margin-top: -2px;">
+<h2 style='margin: 0; color:#333; letter-spacing:0.5px; font-weight:300; font-size: 28px;'>Family Wealth</h2>
+<div style='margin-left: 12px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; letter-spacing: 0.5px; display: flex; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); {pill_style}'>
+<span style='margin-right: 4px; font-size: 10px;'>{icon}</span> {status_text}
+</div>
+</div>
+""", unsafe_allow_html=True)
 
     # 🔥 禅模式状态初始化 (默认关闭)
     zen_mode = False
