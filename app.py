@@ -783,7 +783,23 @@ def main():
                     if card['signal_type'] == "BUY": title_suffix += " 🎯 机会"
                     elif card['signal_type'] == "SELL": title_suffix += " 🔥 止盈"
                     
-                    title = f"{icon} {card['name']}{title_suffix}"
+                    # ----------------------------------------------------
+                    # 📊 昨日盈亏数据 (移动到标题栏)
+                    # ----------------------------------------------------
+                    h_stats = card['h_stats']
+                    yes_profit = card['yes_profit']
+                    yesterday_info = ""
+                    
+                    if h_stats['last_date'] != "-":
+                        y_sign = "+" if h_stats['yesterday'] > 0 else ""
+                        s_icon = "🔥" if h_stats['streak_type'] == "up" else "🥶" if h_stats['streak_type'] == "down" else "😐"
+                        s_text = f"{h_stats['streak']}连涨" if h_stats['streak_type'] == "up" else f"{h_stats['streak']}连跌" if h_stats['streak_type'] == "down" else "平盘"
+                        
+                        # 构造标题栏后缀信息 (注意对齐空格)
+                        # 格式: (02-06) +¥6,526.8 +1.47% 🔥 1连涨
+                        yesterday_info = f"　　({h_stats['last_date']}) {y_sign}¥{yes_profit:,.0f}  {y_sign}{h_stats['yesterday']}%  {s_icon}{s_text}"
+
+                    title = f"{icon} {card['name']}{title_suffix}{yesterday_info}"
                     
                     with st.expander(title):
                         # ----------------------------------------------------
@@ -805,32 +821,8 @@ def main():
                             st.markdown(pill_html, unsafe_allow_html=True)
                         
                         # ----------------------------------------------------
-                        # 📊 历史数据看板 (Redesigned: Flat & Compact)
+                        # (Old Yesterday Stats Display Removed)
                         # ----------------------------------------------------
-                        h_stats = card['h_stats']
-                        yes_profit = card['yes_profit']
-                        
-                        if h_stats['last_date'] != "-":
-                            # 准备数据
-                            y_color = "#d93025" if h_stats['yesterday'] > 0 else "#1e8e3e"
-                            y_sign = "+" if h_stats['yesterday'] > 0 else ""
-                            
-                            s_icon = "🔥" if h_stats['streak_type'] == "up" else "🥶" if h_stats['streak_type'] == "down" else "😐"
-                            s_text = f"{h_stats['streak']}连涨" if h_stats['streak_type'] == "up" else f"{h_stats['streak']}连跌" if h_stats['streak_type'] == "down" else "平盘"
-                            
-                            # 扁平化展示：日期 + 金额 + 幅度 + 连涨连跌
-                            # 字体大小保持一致 (12px-13px)
-                            flat_html = f"""
-                            <div style='display:flex; align-items:center; margin-top: 6px; margin-bottom: 2px; font-size: 13px; font-family: -apple-system;'>
-                                <span style='color:#999; margin-right: 8px;'>({h_stats['last_date']})</span>
-                                <span style='color:{y_color}; font-weight:600; margin-right: 8px;'>{y_sign}¥{yes_profit:,.1f}</span>
-                                <span style='color:{y_color}; margin-right: 12px;'>{y_sign}{h_stats['yesterday']}%</span>
-                                <span style='background:#f5f5f5; color:#666; padding: 2px 6px; border-radius: 4px; font-size: 12px;'>
-                                    {s_icon} {s_text}
-                                </span>
-                            </div>
-                            """
-                            st.markdown(flat_html, unsafe_allow_html=True)
                         
                         st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
                         # ----------------------------------------------------
