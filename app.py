@@ -710,7 +710,9 @@ def main():
                             border: 1px solid rgba(255, 255, 255, 0.6); padding: 15px 10px; 
                             border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
                             min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
-                    <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>今日预估收益</div>
+                    <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>
+                        今日预估收益 <span style='font-size:11px; color:#999; margin-left:4px; font-weight:400'>{bj_time.strftime('%Y年%m月%d日')}</span>
+                    </div>
                     <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63); overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important;'>{display_value_1}</div>
                 </div>
                 """, unsafe_allow_html=True)
