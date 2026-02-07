@@ -827,6 +827,10 @@ def main():
                         y_sign_pct = "+" if h_stats['yesterday'] > 0 else "" 
                         y_sign_money = "+" if yes_profit > 0 else "-"
 
+                        # 3. 连涨连跌图标 (Missing variables restored)
+                        s_icon = "🔥" if h_stats['streak_type'] == "up" else "🥶" if h_stats['streak_type'] == "down" else "😐"
+                        s_text = f"{h_stats['streak']}连涨" if h_stats['streak_type'] == "up" else f"{h_stats['streak']}连跌" if h_stats['streak_type'] == "down" else "平盘"
+
                         # 核心数据: 极简格式
                         yesterday_info = f"   {y_sign_pct}{h_stats['yesterday']}%  {y_sign_money}¥{abs_profit:,.0f}  {s_icon}{s_text}"
 
