@@ -791,13 +791,32 @@ def main():
                     yesterday_info = ""
                     
                     if h_stats['last_date'] != "-":
-                        y_sign = "+" if h_stats['yesterday'] > 0 else ""
+                        # 1. 日期格式化: 02-06 -> 2月6日
+                        try:
+                            md = h_stats['last_date'].split('-')
+                            date_str = f"{int(md[0])}月{int(md[1])}日"
+                        except:
+                            date_str = h_stats['last_date']
+
+                        # 2. 盈亏描述: 浮盈/浮亏
+                        p_desc = "浮盈" if h_stats['yesterday'] > 0 else "浮亏"
+                        
+                        # 3. 连涨连跌图标
                         s_icon = "🔥" if h_stats['streak_type'] == "up" else "🥶" if h_stats['streak_type'] == "down" else "😐"
                         s_text = f"{h_stats['streak']}连涨" if h_stats['streak_type'] == "up" else f"{h_stats['streak']}连跌" if h_stats['streak_type'] == "down" else "平盘"
                         
-                        # 构造标题栏后缀信息 (注意对齐空格)
-                        # 格式: (02-06) +¥6,526.8 +1.47% 🔥 1连涨
-                        yesterday_info = f"　　({h_stats['last_date']}) {y_sign}¥{yes_profit:,.0f}  {y_sign}{h_stats['yesterday']}%  {s_icon}{s_text}"
+                        # 构造标题栏后缀信息 (增加间距)
+                        # 格式: (2月6日)  浮盈¥6,527  +1.47%  🔥1连涨
+                        # 注意：为了对齐，浮盈/浮亏后不加符号，直接显示绝对值金额? 或者保留符号? 用户说 "红圈金额处的+-号请替换为浮盈和浮亏"
+                        # 通常 "浮亏 -300" 有点怪， "浮亏 300" 更符合中文习惯。但为了严谨，保留符号也可以。
+                        # 用户原话 "红圈金额处的+-号请替换为浮盈和浮亏"。 
+                        # 原: +¥6527 -> 浮盈¥6527
+                        # 原: ¥-309 -> 浮亏¥309 (去掉负号)
+                        
+                        abs_profit = abs(yes_profit)
+                        y_sign_pct = "+" if h_stats['yesterday'] > 0 else "" # 百分比还是保留符号比较清晰
+                        
+                        yesterday_info = f"　　({date_str})　{p_desc}¥{abs_profit:,.0f}　{y_sign_pct}{h_stats['yesterday']}%　{s_icon}{s_text}"
 
                     title = f"{icon} {card['name']}{title_suffix}{yesterday_info}"
                     
