@@ -781,8 +781,29 @@ def main():
                 
                 # 2. 💎 持仓列表
                 st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
-                st.markdown("<span style='color:#999; font-size:12px; letter-spacing:1px; margin-left:2px; font-weight:500'>PORTFOLIO</span>", unsafe_allow_html=True)
                 
+                # 获取最新日期用于标题显示
+                latest_date_str = ""
+                if cards_data:
+                    # 尝试从第一个数据的 h_stats 中获取日期
+                    try:
+                        raw_date = cards_data[0]['h_stats']['last_date']
+                        if raw_date and raw_date != "-":
+                            # 格式化: 2026-02-06 -> 2026年2月6日收益情况
+                            ymd = raw_date.split('-')
+                            if len(ymd) == 3:
+                                latest_date_str = f" <span style='font-size:11px; font-weight:400; color:#999; margin-left:6px'>{ymd[0]}年{int(ymd[1])}月{int(ymd[2])}日收益情况</span>"
+                    except: pass
+
+                st.markdown(f"<span style='color:#999; font-size:12px; letter-spacing:1px; margin-left:2px; font-weight:500'>PORTFOLIO</span>{latest_date_str}", unsafe_allow_html=True)
+                
+                # 定义简称映射
+                FUND_ALIASES = {
+                    "摩根均衡C": "摩根",
+                    "泰康新锐C": "泰康",
+                    "财通优选C": "财通"
+                }
+
                 for card in cards_data:
                     icon = "👑" if card['est'] > 0 else "📿"
                     
@@ -798,35 +819,23 @@ def main():
                     yesterday_info = ""
                     
                     if h_stats['last_date'] != "-":
-                        # 1. 日期格式化: 02-06 -> 2月6日 实际净值
-                        try:
-                            md = h_stats['last_date'].split('-')
-                            date_str = f"{int(md[0])}月{int(md[1])}日 实际净值"
-                        except:
-                            date_str = h_stats['last_date'] + " 实际净值"
-
-                        # 2. 盈亏描述: 浮盈/浮亏
-                        p_desc = "浮盈" if h_stats['yesterday'] > 0 else "浮亏"
-                        
-                        # 3. 连涨连跌图标
-                        s_icon = "🔥" if h_stats['streak_type'] == "up" else "🥶" if h_stats['streak_type'] == "down" else "😐"
-                        s_text = f"{h_stats['streak']}连涨" if h_stats['streak_type'] == "up" else f"{h_stats['streak']}连跌" if h_stats['streak_type'] == "down" else "平盘"
-                        
-                        # 构造标题栏后缀信息 (移动端优化版)
-                        # 旧: 2月6日 实际净值   浮盈¥ 6,527   +1.47%   🔥1连涨 (太长)
-                        # 新:    02-06  +1.47%  +¥6,527  🔥1连涨 (紧凑)
+                        # 构造标题栏后缀信息 (移动端优化版 V2)
+                        # 旧:    02-06  +1.47%  +¥6,527  🔥1连涨
+                        # 新:           +1.47%  +¥6,527  🔥1连涨 (移除了日期)
                         
                         abs_profit = abs(yes_profit)
                         y_sign_pct = "+" if h_stats['yesterday'] > 0 else "" 
                         y_sign_money = "+" if yes_profit > 0 else "-"
 
-                        # 日期: 02-06
-                        date_short = date_str if len(date_str) < 6 else h_stats['last_date'][5:]
-                        
-                        # 核心数据: 紧凑格式，去除大量空格
-                        yesterday_info = f"   {date_short}  {y_sign_pct}{h_stats['yesterday']}%  {y_sign_money}¥{abs_profit:,.0f}  {s_icon}{s_text}"
+                        # 核心数据: 极简格式
+                        yesterday_info = f"   {y_sign_pct}{h_stats['yesterday']}%  {y_sign_money}¥{abs_profit:,.0f}  {s_icon}{s_text}"
 
-                    title = f"{icon} {card['name']}{title_suffix}{yesterday_info}"
+                    # 使用简称
+                    # card['name'] 是 "摩根均衡C" (split过的)，这里再次匹配
+                    # 注意: card['name'] 已经被 split('(')[0] 处理过
+                    display_name = FUND_ALIASES.get(card['name'], card['name'])
+                    
+                    title = f"{icon} {display_name}{title_suffix}{yesterday_info}"
                     
                     with st.expander(title):
                         # ----------------------------------------------------
