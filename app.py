@@ -462,6 +462,7 @@ def main():
         # 🌟 交易状态胶囊 (美化版 Glassmorphism)
         if is_trading:
             # 交易中：活跃蓝
+            status_text = "交易中"
             pill_style = """
                 background: rgba(227, 242, 253, 0.6);
                 color: #1565c0;
@@ -471,6 +472,7 @@ def main():
             icon = "⚡" 
         else:
             # 休市中：优雅灰/暖色 (茶)
+            status_text = "休市中"
             pill_style = """
                 background: rgba(245, 245, 247, 0.6);
                 color: #666;
