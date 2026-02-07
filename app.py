@@ -12,10 +12,10 @@ from github import Github
 # 这里就是你要的“审计胶囊”配置
 AUDIT_MEMO = {
     "摩根均衡": {
-        "tag": "⚠️ 偏离较高", 
-        "text": "上周偏离 -0.7%，需注意误差", 
-        "color": "#FFF3CD", # 浅橙色背景
-        "text_color": "#856404" # 深褐色文字
+        "tag": "✅ 准确率高", 
+        "text": "上周偏离值在0.1-0.5之间，可信度高", 
+        "color": "#D4EDDA", # 浅绿色背景
+        "text_color": "#155724" # 深绿色文字
     },
     "泰康新锐": {
         "tag": "✅ 准确率高", 
@@ -448,7 +448,32 @@ def main():
     
     with top_col1:
         st.caption(f"{greeting} | {bj_time.strftime('%m-%d %H:%M')}")
-        st.markdown(f"<h2 style='margin-top:-10px; color:#333; letter-spacing:0.5px; font-weight:300'>Family Wealth</h2>", unsafe_allow_html=True)
+        
+        # 🟢 交易状态逻辑 (Added by User Request)
+        is_trading = False
+        if bj_time.weekday() < 5: # Mon-Fri
+            current_time = bj_time.time()
+            # 简单构造时间对象用于比较 (注意：这里用replace是为了确保只比较时间部分，或者直接构造datetime)
+            # 更简单的是比较 hour/minute
+            t_val = current_time.hour * 100 + current_time.minute
+            if (930 <= t_val <= 1130) or (1300 <= t_val <= 1500):
+                is_trading = True
+        
+        status_text = "当前交易中，请坐好扶稳！" if is_trading else "休市中，叹杯茶啦！"
+        # 交易中：浅红/红字 (提醒) or 浅绿/绿字 (安全?) -> 股市通常红涨绿跌，或者用动态。
+        # 这里用中性色或用户习惯偏好。
+        # 交易中: 蓝色提示 (Active), 休市: 灰色 (Inactive)
+        bg_color = "#e3f2fd" if is_trading else "#f1f3f4"
+        text_color = "#0d47a1" if is_trading else "#5f6368"
+        
+        st.markdown(f"""
+        <div style="display: flex; align-items: center;">
+            <h2 style='margin-top:-10px; margin-bottom: 0; color:#333; letter-spacing:0.5px; font-weight:300'>Family Wealth</h2>
+            <span style='margin-left: 10px; margin-top: -8px; background-color: {bg_color}; color: {text_color}; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500;'>
+                {status_text}
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
 
     # 🔥 禅模式状态初始化 (默认关闭)
     zen_mode = False
