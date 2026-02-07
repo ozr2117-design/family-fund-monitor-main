@@ -2,7 +2,8 @@ name: Fund Sentinel (Daily Check)
 
 on:
   schedule:
-    - cron: '15 7 * * 1-5' # 07:15 UTC = 15:15 Beijing
+    - cron: '45 6 * * 1-5' # 06:45 UTC = 14:45 Beijing (Signal Check)
+    - cron: '15 7 * * 1-5' # 07:15 UTC = 15:15 Beijing (Daily Report)
   workflow_dispatch:
 
 # 🔥 核心变化1：赋予写入仓库的权限

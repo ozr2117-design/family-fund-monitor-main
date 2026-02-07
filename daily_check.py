@@ -147,6 +147,7 @@ def main():
     bj_time = datetime.utcnow() + timedelta(hours=8)
     now = bj_time
     # 只要是 15点，或者 16点30分之前，都允许发送 (防止排队太久导致错过)
+    # 只有 15:00 之后才发送收盘报告 (14:45 只发信号)
     is_market_close_window = (now.hour == 15) or (now.hour == 16 and now.minute <= 30)
     
     report_lines = []
