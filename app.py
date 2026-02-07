@@ -294,7 +294,15 @@ def get_realtime_price(stock_codes):
                         close = float(data[4])
                         pct = 0.0
                         if close > 0: pct = ((current - close) / close) * 100
-                        price_data[code] = {'name': name, 'change': pct}
+                        
+                        # Extract date from index 30 (Format: 20231027153000)
+                        data_date = ""
+                        if len(data) > 30:
+                            raw_time = data[30]
+                            if len(raw_time) >= 8:
+                                data_date = f"{raw_time[:4]}-{raw_time[4:6]}-{raw_time[6:8]}"
+                        
+                        price_data[code] = {'name': name, 'change': pct, 'date': data_date}
                 except: continue
         return price_data
     except: return None
@@ -705,13 +713,25 @@ def main():
                     else:
                         display_value_1 = f"{total_profit:+.0f}"
                 
+                # 优先使用行情数据中的日期
+                est_date_str = bj_time.strftime('%Y年%m月%d日')
+                if market_data:
+                    # 尝试从第一个有效数据中获取日期
+                    for code, d in market_data.items():
+                        if d.get('date'):
+                            try:
+                                ymd = d['date'].split('-')
+                                est_date_str = f"{ymd[0]}年{int(ymd[1])}月{int(ymd[2])}日"
+                                break
+                            except: pass
+
                 row1_col1.markdown(f"""
                 <div style='background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); 
                             border: 1px solid rgba(255, 255, 255, 0.6); padding: 15px 10px; 
                             border-radius: 20px; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05); 
                             min-height: 115px; display: flex; flex-direction: column; justify-content: center;'>
                     <div style='font-size: 12px; color: rgb(49, 51, 63); margin-bottom: 4px;'>
-                        今日预估收益 <span style='font-size:11px; color:#999; margin-left:4px; font-weight:400'>{bj_time.strftime('%Y年%m月%d日')}</span>
+                        今日预估收益 <span style='font-size:11px; color:#999; margin-left:4px; font-weight:400'>{est_date_str}</span>
                     </div>
                     <div style='font-size: 16px; font-weight: 600; color: rgb(49, 51, 63); overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important;'>{display_value_1}</div>
                 </div>
