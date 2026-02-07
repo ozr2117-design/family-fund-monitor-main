@@ -791,12 +791,12 @@ def main():
                     yesterday_info = ""
                     
                     if h_stats['last_date'] != "-":
-                        # 1. 日期格式化: 02-06 -> 2月6日
+                        # 1. 日期格式化: 02-06 -> 2月6日 实际净值
                         try:
                             md = h_stats['last_date'].split('-')
-                            date_str = f"{int(md[0])}月{int(md[1])}日"
+                            date_str = f"{int(md[0])}月{int(md[1])}日 实际净值"
                         except:
-                            date_str = h_stats['last_date']
+                            date_str = h_stats['last_date'] + " 实际净值"
 
                         # 2. 盈亏描述: 浮盈/浮亏
                         p_desc = "浮盈" if h_stats['yesterday'] > 0 else "浮亏"
@@ -805,18 +805,19 @@ def main():
                         s_icon = "🔥" if h_stats['streak_type'] == "up" else "🥶" if h_stats['streak_type'] == "down" else "😐"
                         s_text = f"{h_stats['streak']}连涨" if h_stats['streak_type'] == "up" else f"{h_stats['streak']}连跌" if h_stats['streak_type'] == "down" else "平盘"
                         
-                        # 构造标题栏后缀信息 (增加间距)
-                        # 格式: (2月6日)  浮盈¥6,527  +1.47%  🔥1连涨
-                        # 注意：为了对齐，浮盈/浮亏后不加符号，直接显示绝对值金额? 或者保留符号? 用户说 "红圈金额处的+-号请替换为浮盈和浮亏"
-                        # 通常 "浮亏 -300" 有点怪， "浮亏 300" 更符合中文习惯。但为了严谨，保留符号也可以。
-                        # 用户原话 "红圈金额处的+-号请替换为浮盈和浮亏"。 
-                        # 原: +¥6527 -> 浮盈¥6527
-                        # 原: ¥-309 -> 浮亏¥309 (去掉负号)
+                        # 构造标题栏后缀信息 (增加间距与对齐)
+                        # 格式: 2月6日 实际净值   浮盈¥ 6,527   +1.47%   🔥1连涨
                         
                         abs_profit = abs(yes_profit)
-                        y_sign_pct = "+" if h_stats['yesterday'] > 0 else "" # 百分比还是保留符号比较清晰
+                        y_sign_pct = "+" if h_stats['yesterday'] > 0 else "" 
                         
-                        yesterday_info = f"　　({date_str})　{p_desc}¥{abs_profit:,.0f}　{y_sign_pct}{h_stats['yesterday']}%　{s_icon}{s_text}"
+                        # 数据对齐优化 (使用空格填充)
+                        # 金额: 预留7位字符宽 (例如 "  6,527")
+                        amount_str = f"{abs_profit:,.0f}".rjust(7)
+                        # 幅度: 预留7位字符宽 (例如 " +1.47%")
+                        pct_str = f"{y_sign_pct}{h_stats['yesterday']}%".rjust(7)
+
+                        yesterday_info = f"　　{date_str}　{p_desc}¥{amount_str}　{pct_str}　{s_icon}{s_text}"
 
                     title = f"{icon} {card['name']}{title_suffix}{yesterday_info}"
                     
