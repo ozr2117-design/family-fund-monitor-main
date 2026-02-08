@@ -834,34 +834,13 @@ def main():
                     elif card['signal_type'] == "SELL": title_suffix += " 🔥 止盈"
                     
                     # ----------------------------------------------------
-                    # 📊 昨日盈亏数据 (移动到标题栏)
+                    # 📊 昨日盈亏数据 (已移回卡片内部显示)
                     # ----------------------------------------------------
-                    h_stats = card['h_stats']
-                    yes_profit = card['yes_profit']
-                    yesterday_info = ""
                     
-                    if h_stats['last_date'] != "-":
-                        # 构造标题栏后缀信息 (移动端优化版 V2)
-                        # 旧:    02-06  +1.47%  +¥6,527  🔥1连涨
-                        # 新:           +1.47%  +¥6,527  🔥1连涨 (移除了日期)
-                        
-                        abs_profit = abs(yes_profit)
-                        y_sign_pct = "+" if h_stats['yesterday'] > 0 else "" 
-                        y_sign_money = "+" if yes_profit > 0 else "-"
-
-                        # 3. 连涨连跌图标 (Missing variables restored)
-                        s_icon = "🔥" if h_stats['streak_type'] == "up" else "🥶" if h_stats['streak_type'] == "down" else "😐"
-                        s_text = f"{h_stats['streak']}连涨" if h_stats['streak_type'] == "up" else f"{h_stats['streak']}连跌" if h_stats['streak_type'] == "down" else "平盘"
-
-                        # 核心数据: 极简格式
-                        yesterday_info = f"   {y_sign_pct}{h_stats['yesterday']}%  {y_sign_money}¥{abs_profit:,.0f}  {s_icon}{s_text}"
-
                     # 使用简称
-                    # card['name'] 是 "摩根均衡C" (split过的)，这里再次匹配
-                    # 注意: card['name'] 已经被 split('(')[0] 处理过
                     display_name = FUND_ALIASES.get(card['name'], card['name'])
                     
-                    title = f"{icon} {display_name}{title_suffix}{yesterday_info}"
+                    title = f"{icon} {display_name}{title_suffix}"
                     
                     with st.expander(title):
                         # ----------------------------------------------------
@@ -883,10 +862,30 @@ def main():
                             st.markdown(pill_html, unsafe_allow_html=True)
                         
                         # ----------------------------------------------------
-                        # (Old Yesterday Stats Display Removed)
+                        # 📊 昨日盈亏数据 (回归卡片内部)
                         # ----------------------------------------------------
-                        
-                        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+                        h_stats = card['h_stats']
+                        if h_stats['last_date'] != "-":
+                            yes_profit = card['yes_profit']
+                            abs_profit = abs(yes_profit)
+                            y_sign_pct = "+" if h_stats['yesterday'] > 0 else ""
+                            y_sign_money = "+" if yes_profit > 0 else "-"
+                            
+                            # 颜色逻辑保持一致：涨红跌绿
+                            color_style = "color:#ff3b30" if h_stats['yesterday'] > 0 else "color:#34c759"
+                            
+                            s_icon = "🔥" if h_stats['streak_type'] == "up" else "🥶" if h_stats['streak_type'] == "down" else "😐"
+                            s_text = f"{h_stats['streak']}连涨" if h_stats['streak_type'] == "up" else f"{h_stats['streak']}连跌" if h_stats['streak_type'] == "down" else "平盘"
+                            
+                            st.markdown(f"""
+                            <div style='display:flex; align-items:center; font-size:14px; margin-top:-2px; margin-bottom:12px; font-family:-apple-system'>
+                                <span style='{color_style}; font-weight:600; margin-right:12px'>{y_sign_pct}{h_stats['yesterday']}%</span>
+                                <span style='{color_style}; font-weight:600; margin-right:12px'>{y_sign_money}¥{abs_profit:,.0f}</span>
+                                <span style='color:#666; font-size:13px; font-weight:500'>{s_icon} {s_text}</span>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
                         # ----------------------------------------------------
 
                         # 信号区域 (不受禅模式影响，必须清晰)
