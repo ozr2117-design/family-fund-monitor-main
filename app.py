@@ -409,6 +409,7 @@ def get_dashboard_stats(fund_name, cache):
     last_date = dates[0]
     stats["yesterday"] = history[last_date]
     stats["last_date"] = last_date[5:] # 只显示 MM-DD
+    stats["full_last_date"] = last_date # YYYY-MM-DD
     
     # 2. 连涨连跌计算
     if len(dates) < 2: return stats
@@ -877,8 +878,18 @@ def main():
                             s_icon = "🔥" if h_stats['streak_type'] == "up" else "🥶" if h_stats['streak_type'] == "down" else "😐"
                             s_text = f"{h_stats['streak']}连涨" if h_stats['streak_type'] == "up" else f"{h_stats['streak']}连跌" if h_stats['streak_type'] == "down" else "平盘"
                             
+                            # 格式化日期：2026-02-06 -> 2026年2月6日
+                            date_display = ""
+                            try:
+                                full_date = h_stats.get('full_last_date', '')
+                                if full_date:
+                                    ymd = full_date.split('-')
+                                    date_display = f"{ymd[0]}年{int(ymd[1])}月{int(ymd[2])}日"
+                            except: pass
+
                             st.markdown(f"""
                             <div style='display:flex; align-items:center; font-size:14px; margin-top:-2px; margin-bottom:12px; font-family:-apple-system'>
+                                <span style='color:#666; font-weight:500; margin-right:12px; font-size:13px'>{date_display}</span>
                                 <span style='{color_style}; font-weight:600; margin-right:12px'>{y_sign_pct}{h_stats['yesterday']}%</span>
                                 <span style='{color_style}; font-weight:600; margin-right:12px'>{y_sign_money}¥{abs_profit:,.0f}</span>
                                 <span style='color:#666; font-size:13px; font-weight:500'>{s_icon} {s_text}</span>
