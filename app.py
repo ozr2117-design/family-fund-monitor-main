@@ -888,11 +888,36 @@ def main():
                             except: pass
 
                             st.markdown(f"""
-                            <div style='display:flex; align-items:center; font-size:14px; margin-top:-2px; margin-bottom:12px; font-family:-apple-system'>
-                                <span style='color:#666; font-weight:500; margin-right:12px; font-size:13px'>{date_display}</span>
-                                <span style='{color_style}; font-weight:600; margin-right:12px'>{y_sign_pct}{h_stats['yesterday']}%</span>
-                                <span style='{color_style}; font-weight:600; margin-right:12px'>{y_sign_money}¥{abs_profit:,.0f}</span>
-                                <span style='color:#666; font-size:13px; font-weight:500'>{s_icon} {s_text}</span>
+                            <div style='
+                                background-color: rgba(248, 249, 250, 0.7); 
+                                border: 1px solid rgba(0,0,0,0.05); 
+                                border-radius: 10px; 
+                                padding: 10px 14px; 
+                                display: flex; 
+                                align-items: center; 
+                                justify-content: space-between; 
+                                margin-bottom: 15px;
+                                margin-top: 4px;
+                                font-family: -apple-system;
+                            '>
+                                <div style='display:flex; align-items:center;'>
+                                    <span style='color:#8e8e93; font-size:13px; font-weight:500; letter-spacing:0.3px'>{date_display}</span>
+                                    <div style='width:1px; height:12px; background:#ddd; margin:0 12px;'></div>
+                                    <span style='{color_style}; font-size:15px; font-weight:600; font-variant-numeric: tabular-nums;'>{y_sign_pct}{h_stats['yesterday']}%</span>
+                                    <span style='{color_style}; font-size:15px; font-weight:600; margin-left:8px; font-variant-numeric: tabular-nums;'>{y_sign_money}¥{abs_profit:,.0f}</span>
+                                </div>
+                                <div style='
+                                    background: rgba(0,0,0,0.04); 
+                                    padding: 3px 8px; 
+                                    border-radius: 6px; 
+                                    font-size: 11px; 
+                                    font-weight: 600; 
+                                    color: #555;
+                                    display: flex;
+                                    align-items: center;
+                                '>
+                                    {s_icon} <span style='margin-left:3px'>{s_text}</span>
+                                </div>
                             </div>
                             """, unsafe_allow_html=True)
                         else:
