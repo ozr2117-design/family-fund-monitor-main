@@ -2,8 +2,8 @@ name: Fund Sentinel (Daily Check)
 
 on:
   schedule:
-    - cron: '45 6 * * 1-5' # 06:45 UTC = 14:45 Beijing (Signal Check)
-    - cron: '15 7 * * 1-5' # 07:15 UTC = 15:15 Beijing (Daily Report)
+    - cron: '47 6 * * 1-5' # 06:47 UTC = 14:47 Beijing (Signal Check)
+    - cron: '17 7 * * 1-5' # 07:17 UTC = 15:17 Beijing (Daily Report)
   workflow_dispatch:
 
 # 🔥 核心变化1：赋予写入仓库的权限
@@ -37,7 +37,7 @@ jobs:
         run: |
           git config --global user.name "FundBot"
           git config --global user.email "bot@github.com"
-          git add signals.md
+          git add signals.md report_status.json
           # 只有当文件有变化时才提交，否则不报错
-          git commit -m "📝 Update signal log" || echo "No changes to commit"
+          git commit -m "📝 Update signal log & status" || echo "No changes to commit"
           git push

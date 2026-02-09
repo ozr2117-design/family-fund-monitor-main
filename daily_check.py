@@ -141,14 +141,9 @@ def main():
     messages = []
     log_entries = [] # 专门用于写日记的数据结构
     
-    # 🕒 必须在 此时间段内 才发送“收盘估值报告”
-    # 目标：15:15 | 范围放宽: 15:00 - 16:30 (应对 GitHub Actions 延迟)
     # GitHub Action 跑在 UTC，需+8小时转为北京时间
     bj_time = datetime.utcnow() + timedelta(hours=8)
     now = bj_time
-    # 只要是 15点，或者 16点30分之前，都允许发送 (防止排队太久导致错过)
-    # 只有 15:00 之后才发送收盘报告 (14:45 只发信号)
-    is_market_close_window = (now.hour == 15) or (now.hour == 16 and now.minute <= 30)
     
     report_lines = []
     total_est_profit = 0
@@ -214,17 +209,44 @@ def main():
     else:
         print("今日无交易信号")
 
+    today_date = now.strftime('%Y-%m-%d')
+    report_status_file = "report_status.json"
+    
+    # 读取报告发送状态
+    report_sent = False
+    try:
+        if os.path.exists(report_status_file):
+            with open(report_status_file, 'r', encoding='utf-8') as f:
+                status_data = json.load(f)
+                if status_data.get("date") == today_date and status_data.get("sent"):
+                    report_sent = True
+    except: pass
+
+    # 🕒 收盘估值报告逻辑优化
+    # 只要是 15:00 之后，且今天还没发过，就发送 (不再限制 16:30 截止，防止 GitHub Action 延迟)
+    is_report_time = (now.hour >= 15)
+    
     # ---------------------------
-    # 📢 2. 发送收盘估值报告 (特定时间段)
+    # 📢 2. 发送收盘估值报告
     # ---------------------------
-    if is_market_close_window:
+    if is_report_time and not report_sent:
         print("[REPORT] 正在生成收盘估值报告...")
         title = f"收盘估值播报 {datetime.now().strftime('%H:%M')}"
-        body = f"📅 {datetime.now().strftime('%Y-%m-%d')}\n\n" + "\n".join(report_lines)
+        body = f"📅 {today_date}\n\n" + "\n".join(report_lines)
         send_message(title, body)
         print("[OK] 估值报告已推送")
+        
+        # 记录已发送状态
+        try:
+            with open(report_status_file, 'w', encoding='utf-8') as f:
+                json.dump({"date": today_date, "sent": True}, f)
+        except Exception as e:
+            print(f"❌ 记录报告状态失败: {e}")
+
+    elif report_sent:
+        print(f"今日 ({today_date}) 收盘报告已发送，跳过。")
     else:
-        print(f"非收盘报告时间 (当前 {now.strftime('%H:%M')})")
+        print(f"非收盘报告时间 (当前 {now.strftime('%H:%M')})，等待 15:00 后发送")
 
 if __name__ == "__main__":
     main()
