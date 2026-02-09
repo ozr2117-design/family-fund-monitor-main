@@ -147,11 +147,11 @@ def run_check():
             
     print("⏰ 时间到！开始干活！")
     
-    # 设置一个截止时间 (例如 北京时间 23:55)
+    # 设置一个截止时间 (例如 北京时间 22:00)
     # 既然 GitHub Actions 最多跑 6 小时 (从 20:00 开始)，到 02:00 就会被杀掉
-    # 我们设一个 23:30 的“软截止”，如果到点了还没全齐，也发消息
-    deadline_hour = 23
-    deadline_minute = 30 
+    # 我们设一个 22:00 的“软截止”，如果到点了还没全齐，也发消息
+    deadline_hour = 22
+    deadline_minute = 0 
     
     while True:
         updated_count = 0
