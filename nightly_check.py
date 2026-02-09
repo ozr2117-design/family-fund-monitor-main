@@ -146,22 +146,32 @@ def run_check():
             break
             
     print("⏰ 时间到！开始干活！")
-
+    
+    # 设置一个截止时间 (例如 北京时间 23:55)
+    # 既然 GitHub Actions 最多跑 6 小时 (从 20:00 开始)，到 02:00 就会被杀掉
+    # 我们设一个 23:30 的“软截止”，如果到点了还没全齐，也发消息
+    deadline_hour = 23
+    deadline_minute = 30 
+    
     while True:
         updated_count = 0
+        
+        # 刷新时间
+        bj_now = datetime.utcnow() + timedelta(hours=8)
+        current_time_str = bj_now.strftime("%H:%M:%S")
         
         # 过滤出有代码映射的基金（防止 funds.json 里有新基金但代码未配，导致死循环）
         target_funds = [k for k in funds_config.keys() if k in FUND_CODES_MAP]
         total_funds = len(target_funds)
         updates_info = [] # 存储更新详情
         
-        current_time = datetime.now().strftime("%H:%M:%S")
-        print(f"[{current_time}] 正在轮询接口 (监控 {total_funds} 只基金)...", end="\r")
+        print(f"[{current_time_str}] 正在轮询接口 (监控 {total_funds} 只基金)...", end="\r")
 
         # 重新读取缓存，防止多进程写冲突（虽然本地一般单进程）
         nav_cache = load_json('nav_history.json') 
         
         need_save = False
+        missing_funds = []
 
         for name in target_funds:
             info = funds_config[name]
@@ -203,13 +213,23 @@ def run_check():
                     "pct": pct_chg
                 })
                 print(f"\n✅ {name.split('(')[0]} 已更新: {nav} ({pct_chg:+.2f}%)")
+            else:
+                missing_funds.append(name.split('(')[0])
 
         if need_save:
             save_json('nav_history.json', nav_cache)
 
-        # 检查是否全部更新完毕
-        if updated_count >= total_funds:
-            print("\n🎉 所有基金净值已更新！准备发送报告...")
+        # 检查是否全部更新完毕 OR 超过截止时间
+        is_all_updated = (updated_count >= total_funds)
+        is_past_deadline = (bj_now.hour > deadline_hour) or (bj_now.hour == deadline_hour and bj_now.minute >= deadline_minute)
+        
+        if is_all_updated or is_past_deadline:
+            if is_all_updated:
+                print("\n🎉 所有基金净值已更新！准备发送报告...")
+                report_type = "全量更新"
+            else:
+                print(f"\n⚠️ 超过截止时间 ({deadline_hour}:{deadline_minute})，发送部分报告...")
+                report_type = "部分更新"
             
             # 生成报告
             total_profit = 0
@@ -223,33 +243,42 @@ def run_check():
                 # 找今天的涨幅
                 pct = 0
                 key_name = name
+                found_today = False
+                
                 if key_name in nav_cache and today_str in nav_cache[key_name]:
                      # 重新计算一下涨幅，为了准确
                     current_nav = nav_cache[key_name][today_str]
+                    found_today = True
                     # 找昨天
                     hist = nav_cache[key_name]
                     dates = sorted(hist.keys())
                     if len(dates) >= 2:
                         prev = hist[dates[-2]]
                         if prev > 0: pct = (current_nav - prev) / prev * 100
-                    
-                profit = principal * pct / 100
-                total_profit += profit
                 
-                icon = "🔴" if pct > 0 else "🟢" if pct < 0 else "⚪"
-                msg_lines.append(f"{icon} {name.split('(')[0]}: {pct:+.2f}% (¥{profit:+.0f})")
+                # 计算收益 (如果还没更新，pct就是0，收益也是0，显示为“待更新”)
+                profit = principal * pct / 100
+                if found_today:
+                    total_profit += profit
+                    icon = "🔴" if pct > 0 else "🟢" if pct < 0 else "⚪"
+                    msg_lines.append(f"{icon} {name.split('(')[0]}: {pct:+.2f}% (¥{profit:+.0f})")
+                else:
+                    msg_lines.append(f"⏳ {name.split('(')[0]}: 待更新...")
 
             yield_rate = (total_profit / total_principal * 100) if total_principal > 0 else 0
             
-            final_title = f"今日实际: {total_profit:+.0f} ({yield_rate:+.2f}%)"
-            final_body = f"📅 {today_str} 净值已出炉\n\n" + "\n".join(msg_lines)
+            # 标题区分
+            final_title = f"{report_type}: {total_profit:+.0f} ({yield_rate:+.2f}%)"
+            final_body = f"📅 {today_str} 净值 ({updated_count}/{total_funds})\n\n" + "\n".join(msg_lines)
+            
+            if not is_all_updated:
+                final_body += f"\n\n⚠️ 未更新: {', '.join(missing_funds)}"
             
             send_notification(final_title, final_body)
             print("✅ 通知已发送，任务结束。")
             break
         
         # 还没更完，休息一下再查
-        # 晚上更新一般比较集中，可以设为 3分钟 一次
         time.sleep(180) 
 
 if __name__ == "__main__":

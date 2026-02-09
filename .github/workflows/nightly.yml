@@ -11,7 +11,7 @@ permissions:
 jobs:
   nightly_scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 360 # Allow running up to 6 hours (Wait for data)
+    timeout-minutes: 480 # Allow running up to 8 hours (Wait for data until 4 AM)
     
     steps:
       - name: Checkout code
