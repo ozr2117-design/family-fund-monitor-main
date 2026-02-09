@@ -1,0 +1,16 @@
+name: Prevent Streamlit Sleep (Keep Alive)
+
+on:
+  schedule:
+    # 北京时间 07:00 = 23:00 UTC (Previous Day)
+    - cron: '0 23 * * *'
+    # 北京时间 18:00 = 10:00 UTC
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+
+jobs:
+  wake_up:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake up App
+        run: curl -L https://family-fund-monitor-1.streamlit.app/
