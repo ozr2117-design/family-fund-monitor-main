@@ -13,4 +13,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wake up App
-        run: curl -L https://family-fund-monitor-1.streamlit.app/
+        run: curl -L --cookie-jar cookie.txt --cookie cookie.txt -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" https://family-fund-monitor-1.streamlit.app/
