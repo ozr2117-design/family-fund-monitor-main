@@ -2,6 +2,7 @@ import requests
 import json
 import os
 from datetime import datetime, timedelta
+import time
 
 # ==========================================
 # ⚙️ 配置区 (安全升级版)
@@ -34,21 +35,40 @@ def load_funds():
 def get_realtime_price(stock_codes):
     if not stock_codes: return {}
     url = f"http://qt.gtimg.cn/q={','.join(stock_codes)}"
-    try:
-        r = requests.get(url, timeout=3)
-        price_data = {}
-        parts = r.text.split(';')
-        for part in parts:
-            if '="' in part:
-                try:
-                    code = part.split('=')[0].split('_')[-1]
-                    data = part.split('="')[1].split('~')
-                    close = float(data[4])
-                    if close > 0:
-                        price_data[code] = ((float(data[3]) - close) / close) * 100
-                except: continue
-        return price_data
-    except: return {}
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+
+    for attempt in range(3):
+        try:
+            r = requests.get(url, headers=headers, timeout=5)
+            if r.status_code != 200:
+                print(f"⚠️ 行情接口返回 {r.status_code}，重试 ({attempt+1}/3)...")
+                continue
+
+            price_data = {}
+            parts = r.text.split(';')
+            for part in parts:
+                if '="' in part:
+                    try:
+                        code = part.split('=')[0].split('_')[-1]
+                        data = part.split('="')[1].split('~')
+                        if len(data) > 4:
+                            close = float(data[4])
+                            if close > 0:
+                                price_data[code] = ((float(data[3]) - close) / close) * 100
+                    except: continue
+            
+            if price_data: return price_data
+            else: print("⚠️ 获取到的行情数据为空")
+            
+        except Exception as e:
+            print(f"⚠️ 网络请求异常: {e}，重试 ({attempt+1}/3)...")
+            time.sleep(2)
+            
+    print("❌ 多次重试失败，无法获取行情数据")
+    return {}
 
 def get_benchmark_pct(fund_name, market_data):
     code = 'sz399006' if any(k in fund_name for k in ["成长", "AI", "优选"]) else 'sh000001'
@@ -103,7 +123,7 @@ def send_message(title, content):
             # 兼容完整URL或纯Key
             base_url = BARK_KEY if BARK_KEY.startswith("http") else f"https://api.day.app/{BARK_KEY}/"
             clean_url = base_url.rstrip('/')
-            requests.get(f"{clean_url}/{title}/{content}?group=fund")
+            requests.get(f"{clean_url}/{title}/{content}?group=fund", timeout=10)
         except: pass
     
     # 2. Push PushPlus
@@ -116,7 +136,7 @@ def send_message(title, content):
                 "content": content.replace("\n", "<br>"), # HTML换行
                 "template": "html"
             }
-            requests.post(pp_url, json=pp_data)
+            requests.post(pp_url, json=pp_data, timeout=10)
         except Exception as e:
             print(f"❌ PushPlus 推送失败: {e}")
 
