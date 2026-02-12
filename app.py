@@ -668,7 +668,7 @@ def main():
                         d = market_data.get(s['code'])
                         if d:
                             val += d['change'] * s['weight']; w += s['weight']
-                            if len(stocks) < 3: 
+                            if len(stocks) < 10: 
                                 stocks.append({"name": d['name'], "pct": d['change']})
                     
                     est = (val / w * factor) if w > 0 else 0
@@ -1011,11 +1011,13 @@ def main():
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        list_html = "<div class='ios-list-container'>"
+                        # 改为2列网格布局，展示前10大持仓
+                        list_html = "<div class='ios-list-container' style='display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px;'>"
                         for i, s in enumerate(card['stocks']):
                             bg_color = "#ff3b30" if s['pct'] > 0 else ("#34c759" if s['pct'] < 0 else "#8e8e93")
                             txt_color = "white"
-                            list_html += f"<div class='ios-row'><div class='ios-index'>{i+1}</div><div class='ios-name'>{s['name']}</div><div class='ios-pill' style='background-color:{bg_color}; color:{txt_color}'>{s['pct']:+.2f}%</div></div>"
+                            # 简化行样式，适应网格
+                            list_html += f"<div class='ios-row' style='border-bottom: 1px solid rgba(0,0,0,0.03); padding: 6px 0;'><div class='ios-index'>{i+1}</div><div class='ios-name' style='font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{s['name']}</div><div class='ios-pill' style='background-color:{bg_color}; color:{txt_color}; font-size:12px; padding:2px 6px; min-width:50px;'>{s['pct']:+.2f}%</div></div>"
                         list_html += "</div>"
                         
                         kc2.markdown(list_html, unsafe_allow_html=True)
