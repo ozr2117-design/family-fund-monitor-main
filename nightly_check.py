@@ -60,10 +60,11 @@ def save_json(filename, data):
         print(f"保存失败: {e}")
         return False
 
-def get_official_nav(fund_code):
-    """获取官方净值接口"""
+def get_official_nav_pct(fund_code):
+    """获取最新两个净值并计算涨跌幅 (返回: 涨幅%, 日期)"""
     timestamp = int(time.time() * 1000)
-    url = f"https://api.fund.eastmoney.com/f10/lsjz?fundCode={fund_code}&pageIndex=1&pageSize=1&_={timestamp}"
+    # Fetch 2 records to calculate change
+    url = f"https://api.fund.eastmoney.com/f10/lsjz?fundCode={fund_code}&pageIndex=1&pageSize=2&_={timestamp}"
     headers = {
         "Referer": "http://fund.eastmoney.com/",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -73,11 +74,16 @@ def get_official_nav(fund_code):
         if r.status_code == 200:
             res = r.json()
             if "Data" in res and "LSJZList" in res["Data"]:
-                data_list = res["Data"]["LSJZList"]
-                if len(data_list) > 0:
-                    latest_data = data_list[0]
-                    # 返回: 净值(float), 日期(str YYYY-MM-DD)
-                    return float(latest_data["DWJZ"]), latest_data["FSRQ"]
+                data = res["Data"]["LSJZList"]
+                if len(data) >= 2:
+                    t_nav = float(data[0]["DWJZ"])
+                    y_nav = float(data[1]["DWJZ"])
+                    if y_nav > 0:
+                        pct = (t_nav - y_nav) / y_nav * 100
+                        return pct, data[0]["FSRQ"]
+                elif len(data) == 1:
+                    # Fallback to JZZZL if only 1 day data
+                    return float(data[0]["JZZZL"]), data[0]["FSRQ"]
     except Exception as e:
         print(f"Error fetching {fund_code}: {e}")
     return None, None
@@ -187,32 +193,20 @@ def run_check():
                 continue 
             
             # API 查询
-            nav, date_str = get_official_nav(code)
+            nav_pct, date_str = get_official_nav_pct(code)
             
-            if date_str == today_str and nav is not None:
+            if date_str == today_str and nav_pct is not None:
                 # ！！！ 发现更新 ！！！
-                nav_cache[key_name][date_str] = nav
+                # Store PERCENTAGE to be compatible with app.py
+                nav_cache[key_name][date_str] = nav_pct
                 need_save = True
                 updated_count += 1
                 
-                # 计算单日涨幅
-                # 拿到昨天的净值对比一下
-                sorted_dates = sorted(nav_cache[key_name].keys())
-                last_nav = 0
-                if len(sorted_dates) >= 2:
-                    last_date = sorted_dates[-2] # -1 is today now
-                    last_nav = nav_cache[key_name][last_date]
-                
-                pct_chg = 0
-                if last_nav > 0:
-                    pct_chg = (nav - last_nav) / last_nav * 100
-                
                 updates_info.append({
                     "name": name.split('(')[0],
-                    "nav": nav,
-                    "pct": pct_chg
+                    "pct": nav_pct
                 })
-                print(f"\n✅ {name.split('(')[0]} 已更新: {nav} ({pct_chg:+.2f}%)")
+                print(f"\n✅ {name.split('(')[0]} 已更新: {nav_pct:+.2f}%")
             else:
                 missing_funds.append(name.split('(')[0])
 
@@ -246,15 +240,9 @@ def run_check():
                 found_today = False
                 
                 if key_name in nav_cache and today_str in nav_cache[key_name]:
-                     # 重新计算一下涨幅，为了准确
-                    current_nav = nav_cache[key_name][today_str]
+                     # nav_cache stores PERCENTAGE now, so just use it
+                    pct = nav_cache[key_name][today_str]
                     found_today = True
-                    # 找昨天
-                    hist = nav_cache[key_name]
-                    dates = sorted(hist.keys())
-                    if len(dates) >= 2:
-                        prev = hist[dates[-2]]
-                        if prev > 0: pct = (current_nav - prev) / prev * 100
                 
                 # 计算收益 (如果还没更新，pct就是0，收益也是0，显示为“待更新”)
                 profit = principal * pct / 100

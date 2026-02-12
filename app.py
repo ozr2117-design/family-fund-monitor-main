@@ -308,8 +308,10 @@ def get_realtime_price(stock_codes):
     except: return None
 
 @st.cache_data(ttl=3600)
-def get_official_nav(fund_code):
-    url = f"https://api.fund.eastmoney.com/f10/lsjz?fundCode={fund_code}&pageIndex=1&pageSize=1"
+def get_official_nav_pct(fund_code):
+    """获取最新两个净值并计算涨跌幅"""
+    # 获取2条数据，确保能算出涨跌幅
+    url = f"https://api.fund.eastmoney.com/f10/lsjz?fundCode={fund_code}&pageIndex=1&pageSize=2"
     headers = {
         "Referer": "http://fund.eastmoney.com/",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -319,12 +321,51 @@ def get_official_nav(fund_code):
         if r.status_code == 200:
             res = r.json()
             if "Data" in res and "LSJZList" in res["Data"]:
-                data_list = res["Data"]["LSJZList"]
-                if len(data_list) > 0:
-                    latest_data = data_list[0]
-                    return float(latest_data["JZZZL"]), latest_data["FSRQ"]
+                data = res["Data"]["LSJZList"]
+                if len(data) >= 2:
+                    today_nav = float(data[0]["DWJZ"])
+                    yesterday_nav = float(data[1]["DWJZ"])
+                    date_str = data[0]["FSRQ"]
+                    
+                    if yesterday_nav > 0:
+                        pct = (today_nav - yesterday_nav) / yesterday_nav * 100
+                        return pct, date_str
+                elif len(data) == 1:
+                     # 只有一天数据，尝试直接取 JZZZL (虽然不太准，但作为备用)
+                     return float(data[0]["JZZZL"]), data[0]["FSRQ"]
     except: pass
     return None, None
+
+def get_audit_status(est_val, actual_val):
+    """计算偏差并返回审计状态"""
+    if actual_val is None: return None
+    
+    diff = abs(est_val - actual_val)
+    
+    if diff <= 0.3:
+        return {
+            "tag": "✅ 准确率高",
+            "text": f"偏差仅 {diff:.2f}%，估值非常精准",
+            "color": "#D4EDDA",
+            "text_color": "#155724",
+            "icon": "🎯"
+        }
+    elif diff <= 1.0:
+        return {
+            "tag": "👌 偏差可控",
+            "text": f"偏差 {diff:.2f}% 在正常范围内",
+            "color": "#D1ECF1",
+            "text_color": "#0C5460",
+             "icon": "👌"
+        }
+    else:
+        return {
+            "tag": "⚠️ 偏差较大",
+            "text": f"偏差 {diff:.2f}%，请注意市场异动",
+            "color": "#FFF3CD",
+            "text_color": "#856404",
+             "icon": "⚠️"
+        }
 
 # === 📈 历史数据与趋势分析 (Auto-Fetch) ===
 
@@ -845,19 +886,38 @@ def main():
                     
                     with st.expander(title):
                         # ----------------------------------------------------
-                        # 🔥 插入审计胶囊 (AUDIT PILL) - 抗干扰版
+                        # 🔥 插入审计胶囊 (AUDIT PILL) - 动态版
                         # ----------------------------------------------------
                         pill_html = ""
-                        for k, v in AUDIT_MEMO.items():
-                            if k in card['full_name']: # 匹配全名
-                                # 使用列表拼接，彻底防止 f-string 缩进引发的 Markdown 渲染错误
-                                html_parts = [
-                                    f"<div class='audit-pill' style='background-color:{v['color']}; color:{v['text_color']};'>",
-                                    f"<strong>{v['tag']}</strong> | {v['text']}",
-                                    "</div>"
-                                ]
-                                pill_html = "".join(html_parts)
-                                break
+                        audit_data = None
+                        
+                        # 1. 尝试获取今日实际净值进行动态对比
+                        key_name = card['full_name'] # name is short, full_name is key
+                        if key_name in nav_cache and today_str in nav_cache[key_name]:
+                            actual_pct = nav_cache[key_name][today_str]
+                            audit_data = get_audit_status(card['est'], actual_pct)
+                        
+                        # 2. 如果没有今日数据，尝试使用静态配置 (作为兜底)
+                        if not audit_data:
+                            for k, v in AUDIT_MEMO.items():
+                                if k in card['full_name']:
+                                    audit_data = v
+                                    break
+                        
+                        # 3. 渲染
+                        if audit_data:
+                            # 确保兼容新旧字段
+                            bg_color = audit_data.get('color', '#f8f9fa')
+                            text_color = audit_data.get('text_color', '#333')
+                            tag = audit_data.get('tag', 'Note')
+                            text = audit_data.get('text', '')
+                            
+                            html_parts = [
+                                f"<div class='audit-pill' style='background-color:{bg_color}; color:{text_color};'>",
+                                f"<strong>{tag}</strong> | {text}",
+                                "</div>"
+                            ]
+                            pill_html = "".join(html_parts)
                         
                         if pill_html:
                             st.markdown(pill_html, unsafe_allow_html=True)
