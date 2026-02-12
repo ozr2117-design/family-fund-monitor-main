@@ -77,7 +77,7 @@ def get_official_nav(fund_code):
                 if len(data_list) > 0:
                     latest_data = data_list[0]
                     # 返回: 净值(float), 日期(str YYYY-MM-DD)
-                    return float(latest_data["JZZZL"]), latest_data["FSRQ"]
+                    return float(latest_data["DWJZ"]), latest_data["FSRQ"]
     except Exception as e:
         print(f"Error fetching {fund_code}: {e}")
     return None, None
