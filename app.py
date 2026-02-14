@@ -963,7 +963,7 @@ def main():
                                 <div style='display:flex; align-items:center;'>
                                     <span style='color:#8e8e93; font-size:12px; font-weight:500; letter-spacing:0.3px'>{date_display}</span>
                                     <div style='width:1px; height:12px; background:#ddd; margin:0 8px;'></div>
-                                    <span style='{color_style}; font-size:14px; font-weight:600; font-variant-numeric: tabular-nums;'>{y_sign_pct}{h_stats['yesterday']}%</span>
+                                    <span style='{color_style}; font-size:14px; font-weight:600; font-variant-numeric: tabular-nums;'>{y_sign_pct}{h_stats['yesterday']:.2f}%</span>
                                     <span style='{color_style}; font-size:14px; font-weight:600; margin-left:6px; font-variant-numeric: tabular-nums;'>{y_sign_money}¥{abs_profit:,.0f}</span>
                                 </div>
                                 <div style='
