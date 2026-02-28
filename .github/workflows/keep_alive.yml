@@ -2,10 +2,10 @@ name: Prevent Streamlit Sleep (Keep Alive)
 
 on:
   schedule:
-    # 北京时间 07:00 = 23:00 UTC (Previous Day)
-    - cron: '0 23 * * *'
-    # 北京时间 18:00 = 10:00 UTC
-    - cron: '0 10 * * *'
+    # 北京时间 07:02 = 23:02 UTC (Previous Day)
+    - cron: '2 23 * * *'
+    # 北京时间 18:02 = 10:02 UTC
+    - cron: '2 10 * * *'
   workflow_dispatch:
 
 jobs:

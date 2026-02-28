@@ -2,7 +2,7 @@ name: Nightly Net Value Update
 
 on:
   schedule:
-    - cron: '0 12 * * 1-5' # 12:00 UTC = 20:00 Beijing
+    - cron: '2 12 * * 1-5' # 12:02 UTC = 20:02 Beijing
   workflow_dispatch:
 
 permissions:
