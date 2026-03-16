@@ -1,4 +1,118 @@
 {
+    "财通优选C (金梓才/AI)": {
+        "factor": 1.0,
+        "holding_value": 100000.0,
+        "holdings": [
+            {
+                "code": "sz300502",
+                "name": "新 易 盛",
+                "weight": 9.69
+            },
+            {
+                "code": "sz301377",
+                "name": "鼎泰高科",
+                "weight": 9.64
+            },
+            {
+                "code": "sz300308",
+                "name": "中际旭创",
+                "weight": 9.58
+            },
+            {
+                "code": "sh688498",
+                "name": "源杰科技",
+                "weight": 9.5
+            },
+            {
+                "code": "sh600183",
+                "name": "生益科技",
+                "weight": 9.41
+            },
+            {
+                "code": "sz002463",
+                "name": "沪电股份",
+                "weight": 9.14
+            },
+            {
+                "code": "sh688195",
+                "name": "腾景科技",
+                "weight": 9.03
+            },
+            {
+                "code": "sz300476",
+                "name": "胜宏科技",
+                "weight": 8.77
+            },
+            {
+                "code": "sh688183",
+                "name": "生益电子",
+                "weight": 8.61
+            },
+            {
+                "code": "sh601138",
+                "name": "工业富联",
+                "weight": 6.72
+            }
+        ],
+        "base_unit": 10000.0
+    },
+    "施罗德中国动力C (020237)": {
+        "factor": 1.0,
+        "holding_value": 100000.0,
+        "holdings": [
+            {
+                "code": "sh601899",
+                "name": "紫金矿业",
+                "weight": 4.61
+            },
+            {
+                "code": "sz002028",
+                "name": "思源电气",
+                "weight": 4.48
+            },
+            {
+                "code": "sh603799",
+                "name": "华友钴业",
+                "weight": 4.23
+            },
+            {
+                "code": "hk01378",
+                "name": "中国宏桥",
+                "weight": 4.22
+            },
+            {
+                "code": "hk03993",
+                "name": "洛阳钼业",
+                "weight": 4.05
+            },
+            {
+                "code": "sz000657",
+                "name": "中钨高新",
+                "weight": 3.57
+            },
+            {
+                "code": "hk02611",
+                "name": "国泰君安",
+                "weight": 3.41
+            },
+            {
+                "code": "hk09988",
+                "name": "阿里巴巴-W",
+                "weight": 3.35
+            },
+            {
+                "code": "sz300274",
+                "name": "阳光电源",
+                "weight": 3.29
+            },
+            {
+                "code": "sz000338",
+                "name": "潍柴动力",
+                "weight": 3.27
+            }
+        ],
+        "base_unit": 10000.0
+    },
     "摩根均衡C (梁鹏/周期)": {
         "factor": 1.0,
         "holding_value": 0.0,
@@ -109,63 +223,6 @@
                 "code": "sh689009",
                 "name": "九号公司",
                 "weight": 3.2
-            }
-        ],
-        "base_unit": 10000.0
-    },
-    "财通优选C (金梓才/AI)": {
-        "factor": 1.0,
-        "holding_value": 100000.0,
-        "holdings": [
-            {
-                "code": "sz300502",
-                "name": "新 易 盛",
-                "weight": 9.69
-            },
-            {
-                "code": "sz301377",
-                "name": "鼎泰高科",
-                "weight": 9.64
-            },
-            {
-                "code": "sz300308",
-                "name": "中际旭创",
-                "weight": 9.58
-            },
-            {
-                "code": "sh688498",
-                "name": "源杰科技",
-                "weight": 9.5
-            },
-            {
-                "code": "sh600183",
-                "name": "生益科技",
-                "weight": 9.41
-            },
-            {
-                "code": "sz002463",
-                "name": "沪电股份",
-                "weight": 9.14
-            },
-            {
-                "code": "sh688195",
-                "name": "腾景科技",
-                "weight": 9.03
-            },
-            {
-                "code": "sz300476",
-                "name": "胜宏科技",
-                "weight": 8.77
-            },
-            {
-                "code": "sh688183",
-                "name": "生益电子",
-                "weight": 8.61
-            },
-            {
-                "code": "sh601138",
-                "name": "工业富联",
-                "weight": 6.72
             }
         ],
         "base_unit": 10000.0
