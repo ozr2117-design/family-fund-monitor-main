@@ -113,6 +113,63 @@
         ],
         "base_unit": 10000.0
     },
+    "公募50私人定制 (进取型)": {
+        "factor": 1.0,
+        "holding_value": 294635.23,
+        "holdings": [
+            {
+                "code": "hk09988",
+                "name": "阿里巴巴-W",
+                "weight": 14.55
+            },
+            {
+                "code": "hk00700",
+                "name": "腾讯控股",
+                "weight": 14.07
+            },
+            {
+                "code": "sz300750",
+                "name": "宁德时代",
+                "weight": 12.3
+            },
+            {
+                "code": "sh601058",
+                "name": "赛轮轮胎",
+                "weight": 6.9
+            },
+            {
+                "code": "hk00981",
+                "name": "中芯国际",
+                "weight": 6.62
+            },
+            {
+                "code": "sh600378",
+                "name": "昊华科技",
+                "weight": 6.49
+            },
+            {
+                "code": "sz300570",
+                "name": "太辰光",
+                "weight": 6.32
+            },
+            {
+                "code": "hk09868",
+                "name": "小鹏汽车-W",
+                "weight": 6.18
+            },
+            {
+                "code": "sz000807",
+                "name": "云铝股份",
+                "weight": 5.8
+            },
+            {
+                "code": "sh601600",
+                "name": "中国铝业",
+                "weight": 5.77
+            }
+        ],
+        "base_unit": 4000.0
+    },
     "摩根均衡C (梁鹏/周期)": {
         "factor": 1.0,
         "holding_value": 100000.0,
