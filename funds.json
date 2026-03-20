@@ -56,6 +56,63 @@
         ],
         "base_unit": 10000.0
     },
+    "新财通 (科技创新混合C)": {
+        "factor": 1.0,
+        "holding_value": 150000.0,
+        "holdings": [
+            {
+                "code": "sz301345",
+                "name": "涛涛车业",
+                "weight": 9.89
+            },
+            {
+                "code": "hk02096",
+                "name": "先声药业",
+                "weight": 8.87
+            },
+            {
+                "code": "hk00867",
+                "name": "康哲药业",
+                "weight": 7.34
+            },
+            {
+                "code": "sz300502",
+                "name": "新易盛",
+                "weight": 6.59
+            },
+            {
+                "code": "sz300308",
+                "name": "中际旭创",
+                "weight": 6.09
+            },
+            {
+                "code": "sz301217",
+                "name": "铜冠铜箔",
+                "weight": 5.80
+            },
+            {
+                "code": "sh603228",
+                "name": "景旺电子",
+                "weight": 4.94
+            },
+            {
+                "code": "hk01530",
+                "name": "三生制药",
+                "weight": 4.52
+            },
+            {
+                "code": "sz002463",
+                "name": "沪电股份",
+                "weight": 4.37
+            },
+            {
+                "code": "sh688256",
+                "name": "寒武纪",
+                "weight": 4.16
+            }
+        ],
+        "base_unit": 10000.0
+    },
     "施罗德中国动力C (020237)": {
         "factor": 1.0,
         "holding_value": 100000.0,
