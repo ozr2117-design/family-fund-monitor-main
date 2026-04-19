@@ -375,6 +375,49 @@ def get_audit_status(est_val, actual_val):
              "icon": "⚠️"
         }
 
+def fetch_fund_holdings(fund_code):
+    """抓取基金最新季报前十大重仓股"""
+    url = f"http://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code={fund_code}&topline=10&year=&month="
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Referer": f"http://fundf10.eastmoney.com/jjcc_{fund_code}.html"
+    }
+    import re
+    try:
+        r = requests.get(url, headers=headers, timeout=5)
+        r.encoding = 'utf-8'
+        match = re.search(r'content:"(.*?)",', r.text)
+        if not match: return []
+        html = match.group(1)
+        
+        holdings = []
+        rows = re.findall(r'<tr[^>]*>(.*?)</tr>', html, re.IGNORECASE | re.DOTALL)
+        for row in rows[1:]:
+            cols = re.findall(r'<td[^>]*>(.*?)</td>', row, re.IGNORECASE | re.DOTALL)
+            if len(cols) >= 9:
+                stock_code = re.sub(r'<[^>]+>', '', cols[1]).strip()
+                stock_name = re.sub(r'<[^>]+>', '', cols[2]).strip()
+                weight_str = re.sub(r'<[^>]+>', '', cols[6]).strip().replace('%', '')
+                try:
+                    weight_float = float(weight_str)
+                    if len(stock_code) == 5:
+                        prefix = 'hk'
+                    else:
+                        if stock_code.startswith('6'): prefix = 'sh'
+                        elif stock_code.startswith('0') or stock_code.startswith('3'): prefix = 'sz'
+                        elif stock_code.startswith('8') or stock_code.startswith('4') or stock_code.startswith('9'): prefix = 'bj'
+                        else: prefix = 'sh'
+                    holdings.append({
+                        "code": f"{prefix}{stock_code}",
+                        "name": stock_name,
+                        "weight": weight_float
+                    })
+                except Exception:
+                    pass
+        return holdings
+    except Exception as e:
+        return []
+
 # === 📈 历史数据与趋势分析 (Auto-Fetch) ===
 
 @st.cache_data(ttl=3600*4)
@@ -554,7 +597,7 @@ def main():
             mode = st.radio("Navigation", ["📡  实时看板", "💰  持仓管理"], label_visibility="collapsed", key="nav_radio")
             st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
             st.caption("Actions")
-            action_mode = st.radio("Tools", ["💾  收盘存证", "⚖️  晚间审计"], label_visibility="collapsed", index=None, key="action_radio")
+            action_mode = st.radio("Tools", ["💾  收盘存证", "⚖️  晚间审计", "🔄  季报更新"], label_visibility="collapsed", index=None, key="action_radio")
 
             current_selection = action_mode if action_mode else mode
 
@@ -638,6 +681,27 @@ def main():
                             save_factor_history(last_date, current_success)
                             st.success("Factors Optimized!"); time.sleep(1); st.rerun()
                         else: st.info("No updates needed today")
+
+            elif current_selection == "🔄  季报更新":
+                st.divider()
+                st.info("自动从天天基金获取最新前十大重仓股 (按持仓市值排序)")
+                if st.button("🔄 一键更新季报持仓", type="primary", use_container_width=True):
+                    with st.spinner("正在获取最新季报持仓..."):
+                        updates = 0
+                        for name, info in funds_config.items():
+                            code = FUND_CODES_MAP.get(name)
+                            if code:
+                                new_holdings = fetch_fund_holdings(code)
+                                if new_holdings and len(new_holdings) > 0:
+                                    funds_config[name]['holdings'] = new_holdings
+                                    updates += 1
+                        if updates > 0:
+                            save_json('funds.json', funds_config, config_sha, "Auto Update Holdings")
+                            st.success(f"成功更新 {updates} 只基金的持仓数据！")
+                            time.sleep(2)
+                            st.rerun()
+                        else:
+                            st.warning("未能获取到新数据，或请求过于频繁。")
 
             st.divider()
             with st.expander("📊 Stability Check"):
