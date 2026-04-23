@@ -344,10 +344,10 @@ def is_fund_code(code):
     return code.isdigit() and len(code) == 6
 
 def shorten_fund_name(name):
-    """缩短基金名称：去掉末尾类型后缀（混合A/股票C/指数等），截取前6字"""
+    """缩短基金名称：去掉末尾类型后缀（混合A/股票C/指数等），截取前4字"""
     import re as _re
     name = _re.sub(r'(混合型?|股票型?|债券型?|指数型?|[ABCDE类]+)$', '', name).strip()
-    return name[:6] if len(name) > 6 else name
+    return name[:4] if len(name) > 4 else name
 
 @st.cache_data(ttl=3600)
 def get_official_nav_pct(fund_code):
@@ -783,6 +783,11 @@ def main():
                                 val += d['change'] * s['weight']; w += s['weight']
                                 if len(stocks) < 10:
                                     stocks.append({"name": shorten_fund_name(d['name']), "pct": d['change']})
+                            else:
+                                # 降级：API 无数据（如持有港股的基金），用配置名字占位，pct=0
+                                if len(stocks) < 10:
+                                    fallback_name = shorten_fund_name(s.get('name', s['code']))
+                                    stocks.append({"name": fallback_name, "pct": None})
                     else:
                         # 📈 普通模式：子持仓为股票，使用腾讯行情
                         for s in info['holdings']:
@@ -1137,10 +1142,16 @@ def main():
                         # 改为2列网格布局，展示前10大持仓
                         list_html = "<div class='ios-list-container' style='display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px;'>"
                         for i, s in enumerate(card['stocks']):
-                            bg_color = "#ff3b30" if s['pct'] > 0 else ("#34c759" if s['pct'] < 0 else "#8e8e93")
+                            pct = s['pct']
+                            if pct is None:
+                                bg_color = "#8e8e93"
+                                pct_label = "--"
+                            else:
+                                bg_color = "#ff3b30" if pct > 0 else ("#34c759" if pct < 0 else "#8e8e93")
+                                pct_label = f"{pct:+.2f}%"
                             txt_color = "white"
                             # 简化行样式，适应网格
-                            list_html += f"<div class='ios-row' style='border-bottom: 1px solid rgba(0,0,0,0.03); padding: 6px 0;'><div class='ios-index'>{i+1}</div><div class='ios-name' style='font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{s['name']}</div><div class='ios-pill' style='background-color:{bg_color}; color:{txt_color}; font-size:12px; padding:2px 6px; min-width:50px;'>{s['pct']:+.2f}%</div></div>"
+                            list_html += f"<div class='ios-row' style='border-bottom: 1px solid rgba(0,0,0,0.03); padding: 6px 0;'><div class='ios-index'>{i+1}</div><div class='ios-name' style='font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{s['name']}</div><div class='ios-pill' style='background-color:{bg_color}; color:{txt_color}; font-size:12px; padding:2px 6px; min-width:50px;'>{pct_label}</div></div>"
                         list_html += "</div>"
                         
                         kc2.markdown(list_html, unsafe_allow_html=True)
