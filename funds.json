@@ -175,54 +175,49 @@
         "holding_value": 300000.0,
         "holdings": [
             {
-                "code": "hk09988",
-                "name": "阿里巴巴-W",
-                "weight": 14.55
+                "code": "013095",
+                "name": "安信远见成长混合A",
+                "weight": 13.29
             },
             {
-                "code": "hk00700",
-                "name": "腾讯控股",
-                "weight": 14.07
+                "code": "000411",
+                "name": "景顺长城优质成长股票A",
+                "weight": 13.28
             },
             {
-                "code": "sz300750",
-                "name": "宁德时代",
-                "weight": 12.3
+                "code": "010624",
+                "name": "富国稳健增长混合A",
+                "weight": 11.64
             },
             {
-                "code": "sh601058",
-                "name": "赛轮轮胎",
-                "weight": 6.9
+                "code": "014287",
+                "name": "泰康新锐成长混合A",
+                "weight": 11.11
             },
             {
-                "code": "hk00981",
-                "name": "中芯国际",
-                "weight": 6.62
+                "code": "016311",
+                "name": "中欧优质企业混合A",
+                "weight": 10.66
             },
             {
-                "code": "sh600378",
-                "name": "昊华科技",
-                "weight": 6.49
+                "code": "090018",
+                "name": "大成新锐产业混合A",
+                "weight": 10.46
             },
             {
-                "code": "sz300570",
-                "name": "太辰光",
-                "weight": 6.32
+                "code": "000934",
+                "name": "国富大中华精选混合",
+                "weight": 10.22
             },
             {
-                "code": "hk09868",
-                "name": "小鹏汽车-W",
-                "weight": 6.18
+                "code": "003293",
+                "name": "易方达科瑞混合",
+                "weight": 10.02
             },
             {
-                "code": "sz000807",
-                "name": "云铝股份",
-                "weight": 5.8
-            },
-            {
-                "code": "sh601600",
-                "name": "中国铝业",
-                "weight": 5.77
+                "code": "001801",
+                "name": "汇添富达欣混合A",
+                "weight": 6.76
             }
         ],
         "base_unit": 4000.0

@@ -315,6 +315,34 @@ def get_realtime_price(stock_codes):
         return price_data
     except: return None
 
+def get_fund_estimated_nav(fund_codes):
+    """获取公募基金的实时估算涨跌幅 (天天基金估值接口)。
+    返回格式与 get_realtime_price 一致: {code: {'name':..., 'change':..., 'date':...}}
+    """
+    result = {}
+    for code in fund_codes:
+        url = f"https://fundgz.1234567.com.cn/js/{code}.js"
+        try:
+            r = requests.get(url, timeout=4, headers={"Referer": "http://fund.eastmoney.com/"})
+            import re as _re
+            m = _re.search(r'jsonpgz\((.+)\)', r.text)
+            if m:
+                data = json.loads(m.group(1))
+                name = data.get('name', code)
+                # gszzl: 估算涨跌幅 (%), gztime: 估算时间
+                pct_str = data.get('gszzl', '0')
+                gztime = data.get('gztime', '')
+                pct = float(pct_str) if pct_str else 0.0
+                date_str = gztime[:10] if len(gztime) >= 10 else ''
+                result[code] = {'name': name, 'change': pct, 'date': date_str}
+        except:
+            continue
+    return result
+
+def is_fund_code(code):
+    """判断一个 code 是公募基金代码（6位纯数字）而非股票代码（带前缀sh/sz/hk等）"""
+    return code.isdigit() and len(code) == 6
+
 @st.cache_data(ttl=3600)
 def get_official_nav_pct(fund_code):
     """获取最新两个净值并计算涨跌幅"""
@@ -736,12 +764,27 @@ def main():
                     base_unit = info.get('base_unit', 1000) 
                     
                     val = 0; w = 0; stocks = []
-                    for s in info['holdings']:
-                        d = market_data.get(s['code'])
-                        if d:
-                            val += d['change'] * s['weight']; w += s['weight']
-                            if len(stocks) < 10: 
-                                stocks.append({"name": d['name'], "pct": d['change']})
+                    
+                    # 判断持仓类型：股票 or 公募基金
+                    fund_sub_codes = [s['code'] for s in info['holdings'] if is_fund_code(s['code'])]
+                    
+                    if fund_sub_codes:
+                        # 🏦 FOF模式：子持仓为公募基金，使用天天基金估值接口
+                        sub_fund_data = get_fund_estimated_nav(fund_sub_codes)
+                        for s in info['holdings']:
+                            d = sub_fund_data.get(s['code'])
+                            if d:
+                                val += d['change'] * s['weight']; w += s['weight']
+                                if len(stocks) < 10:
+                                    stocks.append({"name": d['name'], "pct": d['change']})
+                    else:
+                        # 📈 普通模式：子持仓为股票，使用腾讯行情
+                        for s in info['holdings']:
+                            d = market_data.get(s['code'])
+                            if d:
+                                val += d['change'] * s['weight']; w += s['weight']
+                                if len(stocks) < 10: 
+                                    stocks.append({"name": d['name'], "pct": d['change']})
                     
                     est = (val / w * factor) if w > 0 else 0
                     profit = principal * est / 100
