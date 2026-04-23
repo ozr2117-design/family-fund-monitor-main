@@ -343,6 +343,12 @@ def is_fund_code(code):
     """判断一个 code 是公募基金代码（6位纯数字）而非股票代码（带前缀sh/sz/hk等）"""
     return code.isdigit() and len(code) == 6
 
+def shorten_fund_name(name):
+    """缩短基金名称：去掉末尾类型后缀（混合A/股票C/指数等），截取前6字"""
+    import re as _re
+    name = _re.sub(r'(混合型?|股票型?|债券型?|指数型?|[ABCDE类]+)$', '', name).strip()
+    return name[:6] if len(name) > 6 else name
+
 @st.cache_data(ttl=3600)
 def get_official_nav_pct(fund_code):
     """获取最新两个净值并计算涨跌幅"""
@@ -776,7 +782,7 @@ def main():
                             if d:
                                 val += d['change'] * s['weight']; w += s['weight']
                                 if len(stocks) < 10:
-                                    stocks.append({"name": d['name'], "pct": d['change']})
+                                    stocks.append({"name": shorten_fund_name(d['name']), "pct": d['change']})
                     else:
                         # 📈 普通模式：子持仓为股票，使用腾讯行情
                         for s in info['holdings']:
