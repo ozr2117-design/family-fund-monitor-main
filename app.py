@@ -845,6 +845,9 @@ def main():
                         "yes_profit": yes_profit
                     })
                 
+                # 按持仓金额从高到低排序（无持仓的自动沉底）
+                cards_data.sort(key=lambda x: x['principal'], reverse=True)
+                
                 # Toast
                 if signal_msg: st.toast(signal_msg)
 
