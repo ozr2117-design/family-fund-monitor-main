@@ -1,7 +1,7 @@
 {
     "财通优选C (金梓才/AI)": {
         "factor": 1.0,
-        "holding_value": 30000.0,
+        "holding_value": 70000.0,
         "holdings": [
             {
                 "code": "sz300502",
@@ -58,7 +58,7 @@
     },
     "新财通 (科技创新混合C)": {
         "factor": 1.0,
-        "holding_value": 30000.0,
+        "holding_value": 70000.0,
         "holdings": [
             {
                 "code": "sz300502",
