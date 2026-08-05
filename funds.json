@@ -1,7 +1,7 @@
 {
-    "财通优选C (金梓才/AI)": {
+    "财通周期优选混合C (025547)": {
         "factor": 1.0,
-        "holding_value": 0.0,
+        "holding_value": 69179.98,
         "holdings": [
             {
                 "code": "sz300502",
@@ -56,9 +56,9 @@
         ],
         "base_unit": 10000.0
     },
-    "新财通 (科技创新混合C)": {
+    "财通科技创新混合C (008984)": {
         "factor": 1.0,
-        "holding_value": 20000.0,
+        "holding_value": 14186.41,
         "holdings": [
             {
                 "code": "sz300502",
@@ -113,9 +113,9 @@
         ],
         "base_unit": 10000.0
     },
-    "施罗德中国动力C (020237)": {
+    "路博迈中国动力股票C (020237)": {
         "factor": 1.0,
-        "holding_value": 100000.0,
+        "holding_value": 88136.56,
         "holdings": [
             {
                 "code": "sh688498",
@@ -170,56 +170,9 @@
         ],
         "base_unit": 10000.0
     },
-    "公募50私人定制 (进取型)": {
+    "摩根均衡精选混合A (021273)": {
         "factor": 1.0,
-        "holding_value": 0.0,
-        "holdings": [
-            {
-                "code": "013095",
-                "name": "安信远见成长混合A",
-                "weight": 13.29
-            },
-            {
-                "code": "000411",
-                "name": "景顺长城优质成长股票A",
-                "weight": 13.28
-            },
-            {
-                "code": "010624",
-                "name": "富国稳健增长混合A",
-                "weight": 11.64
-            },
-            {
-                "code": "014287",
-                "name": "泰康新锐成长混合A",
-                "weight": 11.11
-            },
-            {
-                "code": "016311",
-                "name": "中欧优质企业混合A",
-                "weight": 10.66
-            },
-            {
-                "code": "090018",
-                "name": "大成新锐产业混合A",
-                "weight": 10.46
-            },
-            {
-                "code": "003293",
-                "name": "易方达科瑞混合",
-                "weight": 10.02
-            },
-            {
-                "code": "001801",
-                "name": "汇添富达欣混合A",
-                "weight": 6.76
-            }
-        ],
-        "base_unit": 4000.0
-    },
-    "摩根均衡C (梁鹏/周期)": {
-        "factor": 1.0,
-        "holding_value": 300000.0,
+        "holding_value": 283334.6,
         "holdings": [
             {
                 "code": "sz000683",
@@ -274,59 +227,59 @@
         ],
         "base_unit": 10000.0
     },
-    "泰康新锐C (韩庆/成长)": {
+    "华安品质甄选混合A (013680)": {
         "factor": 1.0,
-        "holding_value": 0.0,
+        "holding_value": 75931.91,
         "holdings": [
             {
-                "code": "hk00700",
-                "name": "腾讯控股",
-                "weight": 5.14
+                "code": "sh688359",
+                "name": "三孚新科",
+                "weight": 5.0
             },
             {
-                "code": "sh600176",
-                "name": "中国巨石",
-                "weight": 4.94
+                "code": "sh600869",
+                "name": "远东股份",
+                "weight": 4.5
             },
             {
-                "code": "sh688396",
-                "name": "华润微",
-                "weight": 4.47
-            },
-            {
-                "code": "sh601899",
-                "name": "紫金矿业",
-                "weight": 3.55
-            },
-            {
-                "code": "sz002371",
-                "name": "北方华创",
-                "weight": 3.49
-            },
-            {
-                "code": "hk09988",
-                "name": "阿里巴巴-W",
-                "weight": 3.49
-            },
-            {
-                "code": "hk00981",
+                "code": "sh688981",
                 "name": "中芯国际",
-                "weight": 3.45
+                "weight": 4.0
             },
             {
-                "code": "sz300750",
-                "name": "宁德时代",
-                "weight": 3.44
+                "code": "sz300308",
+                "name": "中际旭创",
+                "weight": 4.0
             },
             {
-                "code": "sh689009",
-                "name": "九号公司",
-                "weight": 3.33
+                "code": "sz300835",
+                "name": "龙磁科技",
+                "weight": 3.5
             },
             {
-                "code": "sh601117",
-                "name": "中国化学",
-                "weight": 3.29
+                "code": "sh603950",
+                "name": "长源东谷",
+                "weight": 3.5
+            },
+            {
+                "code": "sz301511",
+                "name": "德福科技",
+                "weight": 3.0
+            },
+            {
+                "code": "sh688256",
+                "name": "寒武纪",
+                "weight": 3.0
+            },
+            {
+                "code": "sz000519",
+                "name": "中兵红箭",
+                "weight": 3.0
+            },
+            {
+                "code": "sh605589",
+                "name": "圣泉集团",
+                "weight": 2.5
             }
         ],
         "base_unit": 10000.0
