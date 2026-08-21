@@ -63,7 +63,7 @@ def save_json(filename, data):
         return False
 
 def get_official_nav_pct(fund_code):
-    """获取最新两个净值并计算涨跌幅 (返回: 涨幅%, 日期)"""
+    """获取最新两个净值并计算涨跌幅 (返回: 涨幅%, 日期, 最新单位净值)"""
     timestamp = int(time.time() * 1000)
     # Fetch 2 records to calculate change
     url = f"https://api.fund.eastmoney.com/f10/lsjz?fundCode={fund_code}&pageIndex=1&pageSize=2&_={timestamp}"
@@ -82,13 +82,13 @@ def get_official_nav_pct(fund_code):
                     y_nav = float(data[1]["DWJZ"])
                     if y_nav > 0:
                         pct = (t_nav - y_nav) / y_nav * 100
-                        return pct, data[0]["FSRQ"]
+                        return pct, data[0]["FSRQ"], t_nav
                 elif len(data) == 1:
                     # Fallback to JZZZL if only 1 day data
-                    return float(data[0]["JZZZL"]), data[0]["FSRQ"]
+                    return float(data[0]["JZZZL"]), data[0]["FSRQ"], float(data[0]["DWJZ"])
     except Exception as e:
         print(f"Error fetching {fund_code}: {e}")
-    return None, None
+    return None, None, None
 
 def send_notification(title, content):
     """统一发送通知 (Bark + PushPlus)"""
@@ -195,12 +195,19 @@ def run_check():
                 continue 
             
             # API 查询
-            nav_pct, date_str = get_official_nav_pct(code)
+            nav_pct, date_str, t_nav = get_official_nav_pct(code)
             
             if date_str == today_str and nav_pct is not None:
                 # ！！！ 发现更新 ！！！
                 # Store PERCENTAGE to be compatible with app.py
                 nav_cache[key_name][date_str] = nav_pct
+                
+                # 如果配置了份额，根据最新净值更新持仓市值
+                if 'shares' in info and t_nav is not None:
+                    new_holding_value = info['shares'] * t_nav
+                    funds_config[name]['holding_value'] = round(new_holding_value, 2)
+                    print(f"   [市值更新] {name.split('(')[0]}: {info.get('holding_value',0)} -> {round(new_holding_value, 2)}")
+                
                 need_save = True
                 updated_count += 1
                 
@@ -214,6 +221,7 @@ def run_check():
 
         if need_save:
             save_json('nav_history.json', nav_cache)
+            save_json('funds.json', funds_config)
 
         # 检查是否全部更新完毕 OR 超过截止时间
         is_all_updated = (updated_count >= total_funds)

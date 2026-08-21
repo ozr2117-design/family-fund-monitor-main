@@ -1,7 +1,7 @@
 {
     "财通周期优选混合C (025547)": {
         "factor": 1.0,
-        "holding_value": 69179.98,
+        "holding_value": 70720.34,
         "base_unit": 10000.0,
         "holdings": [
             {
@@ -54,11 +54,12 @@
                 "name": "三祥新材",
                 "weight": 4.07
             }
-        ]
+        ],
+        "shares": 85102.7
     },
     "财通科技创新混合C (008984)": {
         "factor": 1.0,
-        "holding_value": 14186.41,
+        "holding_value": 17561.09,
         "base_unit": 10000.0,
         "holdings": [
             {
@@ -111,11 +112,12 @@
                 "name": "长飞光纤光缆",
                 "weight": 6.15
             }
-        ]
+        ],
+        "shares": 9255.83
     },
     "路博迈中国动力股票C (020237)": {
         "factor": 1.0,
-        "holding_value": 88136.56,
+        "holding_value": 88865.66,
         "base_unit": 10000.0,
         "holdings": [
             {
@@ -168,11 +170,12 @@
                 "name": "恩捷股份",
                 "weight": 3.37
             }
-        ]
+        ],
+        "shares": 56519.53
     },
     "摩根均衡精选混合A (021273)": {
         "factor": 1.0,
-        "holding_value": 283334.6,
+        "holding_value": 283995.45,
         "base_unit": 10000.0,
         "holdings": [
             {
@@ -225,11 +228,12 @@
                 "name": "大中矿业",
                 "weight": 3.06
             }
-        ]
+        ],
+        "shares": 213177.79
     },
     "华安品质甄选混合A (013680)": {
         "factor": 1.0,
-        "holding_value": 75931.91,
+        "holding_value": 77958.32,
         "base_unit": 10000.0,
         "holdings": [
             {
@@ -282,6 +286,7 @@
                 "name": "圣泉集团",
                 "weight": 2.5
             }
-        ]
+        ],
+        "shares": 55517.96
     }
 }
