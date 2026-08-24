@@ -4,7 +4,7 @@ on:
   # ✅ 已停用 GitHub 原生 cron（延迟严重，已改用 cron-job.org 在 20:01 精准触发）
   # schedule:
   #   - cron: '2 12 * * 1-5' # 12:02 UTC = 20:02 Beijing
-  workflow_dispatch:  # 由 cron-job.org 精准触发
+  workflow_dispatch:  # 由 cron-job.org 每 30 分钟触发一次
 
 permissions:
   contents: write
@@ -12,7 +12,7 @@ permissions:
 jobs:
   nightly_scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 480 # Allow running up to 8 hours (Wait for data until 4 AM)
+    # 单次执行模式：脚本秒级完成，不再需要长时间等待
     
     steps:
       - name: Checkout code
@@ -32,10 +32,10 @@ jobs:
           PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
         run: python nightly_check.py
         
-      - name: Commit Updated NAV
+      - name: Commit Updated Data
         run: |
           git config --global user.name "FundBot"
           git config --global user.email "bot@github.com"
-          git add nav_history.json
-          git commit -m "🌙 Update NAV history" || echo "No changes to commit"
+          git add nav_history.json nightly_status.json funds.json
+          git commit -m "🌙 Update NAV history & nightly status" || echo "No changes to commit"
           git push

@@ -1,4 +1,4 @@
-import requests
+﻿import requests
 import time
 import json
 import os
@@ -9,14 +9,11 @@ from datetime import datetime, timedelta
 sys.stdout.reconfigure(encoding='utf-8')
 
 # ==========================================
-# ⚙️ 配置区 (安全升级版)
+# Configuration
 # ==========================================
 def load_secrets():
-    # 1. 尝试从环境变量读取 (GitHub Secrets)
     bark = os.getenv("BARK_KEY")
     pp = os.getenv("PUSHPLUS_TOKEN")
-    
-    # 2. 尝试从本地文件读取
     if not bark or not pp:
         try:
             if os.path.exists('secrets.json'):
@@ -25,26 +22,25 @@ def load_secrets():
                     if not bark: bark = data.get("BARK_URL") or data.get("BARK_KEY")
                     if not pp: pp = data.get("PUSHPLUS_TOKEN")
         except: pass
-
     return bark, pp
 
 BARK_KEY, PUSHPLUS_TOKEN = load_secrets()
-# 下面的 BARK_URLS 仅作为旧版兼容，如果不为空且 BARK_KEY 为空，可以尝试使用（这里简化逻辑，直接覆盖）
 
 FUND_CODES_MAP = {
-    '财通周期优选混合C (025547)': '025547',
-    '财通科技创新混合C (008984)': '008984',
-    '路博迈中国动力股票C (020237)': '020237',
-    '摩根均衡精选混合A (021273)': '021273',
-    '华安品质甄选混合A (013680)': '013680'
+    '\u8d22\u901a\u5468\u671f\u4f18\u9009\u6df7\u5408C (025547)': '025547',
+    '\u8d22\u901a\u79d1\u6280\u521b\u65b0\u6df7\u5408C (008984)': '008984',
+    '\u8def\u535a\u8fc8\u4e2d\u56fd\u52a8\u529b\u80a1\u7968C (020237)': '020237',
+    '\u6469\u6839\u5747\u8861\u7cbe\u9009\u6df7\u5408A (021273)': '021273',
+    '\u534e\u5b89\u54c1\u8d28\u7504\u9009\u6df7\u5408A (013680)': '013680'
 }
 
-# ==========================================
-# 🛠️ 核心功能函数
-# ==========================================
+NIGHTLY_STATUS_FILE = "nightly_status.json"
+DEADLINE_HOUR = 22
 
+# ==========================================
+# Utility functions
+# ==========================================
 def load_json(filename):
-    """读取本地JSON文件"""
     if os.path.exists(filename):
         try:
             with open(filename, 'r', encoding='utf-8') as f:
@@ -53,23 +49,20 @@ def load_json(filename):
     return {}
 
 def save_json(filename, data):
-    """保存本地JSON文件"""
     try:
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
         return True
     except Exception as e:
-        print(f"保存失败: {e}")
+        print(f"Save failed: {e}")
         return False
 
 def get_official_nav_pct(fund_code):
-    """获取最新两个净值并计算涨跌幅 (返回: 涨幅%, 日期, 最新单位净值)"""
     timestamp = int(time.time() * 1000)
-    # Fetch 2 records to calculate change
     url = f"https://api.fund.eastmoney.com/f10/lsjz?fundCode={fund_code}&pageIndex=1&pageSize=2&_={timestamp}"
     headers = {
         "Referer": "http://fund.eastmoney.com/",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
     try:
         r = requests.get(url, headers=headers, timeout=5)
@@ -84,200 +77,120 @@ def get_official_nav_pct(fund_code):
                         pct = (t_nav - y_nav) / y_nav * 100
                         return pct, data[0]["FSRQ"], t_nav
                 elif len(data) == 1:
-                    # Fallback to JZZZL if only 1 day data
                     return float(data[0]["JZZZL"]), data[0]["FSRQ"], float(data[0]["DWJZ"])
     except Exception as e:
         print(f"Error fetching {fund_code}: {e}")
     return None, None, None
 
 def send_notification(title, content):
-    """统一发送通知 (Bark + PushPlus)"""
-    print(f"[MSG] 准备发送通知: {title}")
-    
-    # 1. Push Bark
+    print(f"[MSG] Sending: {title}")
     if BARK_KEY:
         try:
-            # 兼容完整URL或纯Key
             base_url = BARK_KEY if BARK_KEY.startswith("http") else f"https://api.day.app/{BARK_KEY}/"
-            clean_url = base_url.rstrip('/')
-            requests.get(f"{clean_url}/{title}/{content}?group=fund")
+            requests.get(f"{base_url.rstrip('/')}/{title}/{content}?group=fund")
         except: pass
-
-    # 2. Push PushPlus
     if PUSHPLUS_TOKEN and len(PUSHPLUS_TOKEN) > 5:
         try:
-            pp_url = "http://www.pushplus.plus/send"
-            pp_data = {
+            requests.post("http://www.pushplus.plus/send", json={
                 "token": PUSHPLUS_TOKEN,
                 "title": title,
-                "content": content.replace("\n", "<br>"), # HTML换行
+                "content": content.replace("\n", "<br>"),
                 "template": "html"
-            }
-            requests.post(pp_url, json=pp_data)
+            })
         except Exception as e:
             print(f"PushPlus Error: {e}")
 
 # ==========================================
-# 🚀 主循环逻辑
+# Main (single-run, no waiting loop)
+# Triggered by cron-job.org every 30 mins
 # ==========================================
-
 def run_check():
-    print("🌙 Nightly Check Started...")
-    
+    print("Nightly Check Started (Single-run mode)...")
+
     funds_config = load_json('funds.json')
     nav_cache = load_json('nav_history.json')
-    
-    # 时区修正：GitHub Action 跑在 UTC，需+8小时转为北京时间
-    # 无论是本地还是云端，统一用这个“北京时间”对象来判断
+    nightly_status = load_json(NIGHTLY_STATUS_FILE)
+
     bj_now = datetime.utcnow() + timedelta(hours=8)
     today_str = bj_now.strftime("%Y-%m-%d")
-    print(f"📅 目标日期: {today_str} (当前时间: {bj_now.strftime('%H:%M')})")
+    print(f"Date: {today_str} | Beijing time: {bj_now.strftime('%H:%M')}")
 
-    # ==========================
-    # 🕒 等待逻辑：直到晚上 20:00
-    # ==========================
-    while True:
-        # 刷新时间
-        bj_now = datetime.utcnow() + timedelta(hours=8)
-        
-        # 如果是下午或晚上，且不到20点，就等待
-        # 范围：12:00 <= T < 20:00
-        if bj_now.hour >= 12 and bj_now.hour < 20:
-            minutes_to_wait = (20 - bj_now.hour) * 60 - bj_now.minute
-            print(f"[{bj_now.strftime('%H:%M')}] 也就是晚上8点才更新，我先歇会儿... 还有 {minutes_to_wait} 分钟")
-            
-            # 如果剩余时间很多，就睡久点；如果不到了，睡短点
-            sleep_sec = 60 * 10 
-            if minutes_to_wait < 10: sleep_sec = 60
-            time.sleep(sleep_sec) 
+    if nightly_status.get("date") == today_str and nightly_status.get("sent"):
+        print(f"Report already sent today ({today_str}), exiting.")
+        return
+
+    target_funds = [k for k in funds_config.keys() if k in FUND_CODES_MAP]
+    total_funds = len(target_funds)
+    need_save = False
+
+    for name in target_funds:
+        info = funds_config[name]
+        code = FUND_CODES_MAP.get(name)
+        if name not in nav_cache:
+            nav_cache[name] = {}
+        if today_str in nav_cache[name]:
+            print(f"[cached] {name.split('(')[0]}")
+            continue
+        nav_pct, date_str, t_nav = get_official_nav_pct(code)
+        if date_str == today_str and nav_pct is not None:
+            nav_cache[name][date_str] = nav_pct
+            if 'shares' in info and t_nav is not None:
+                funds_config[name]['holding_value'] = round(info['shares'] * t_nav, 2)
+            need_save = True
+            print(f"[updated] {name.split('(')[0]}: {nav_pct:+.2f}%")
         else:
-            break
-            
-    print("⏰ 时间到！开始干活！")
-    
-    # 设置一个截止时间 (例如 北京时间 22:00)
-    # 既然 GitHub Actions 最多跑 6 小时 (从 20:00 开始)，到 02:00 就会被杀掉
-    # 我们设一个 22:00 的“软截止”，如果到点了还没全齐，也发消息
-    deadline_hour = 22
-    deadline_minute = 0 
-    
-    while True:
-        updated_count = 0
-        
-        # 刷新时间
-        bj_now = datetime.utcnow() + timedelta(hours=8)
-        current_time_str = bj_now.strftime("%H:%M:%S")
-        
-        # 过滤出有代码映射的基金（防止 funds.json 里有新基金但代码未配，导致死循环）
-        target_funds = [k for k in funds_config.keys() if k in FUND_CODES_MAP]
-        total_funds = len(target_funds)
-        updates_info = [] # 存储更新详情
-        
-        print(f"[{current_time_str}] 正在轮询接口 (监控 {total_funds} 只基金)...", end="\r")
+            print(f"[pending] {name.split('(')[0]}: not published yet")
 
-        # 重新读取缓存，防止多进程写冲突（虽然本地一般单进程）
-        nav_cache = load_json('nav_history.json') 
-        
-        need_save = False
-        missing_funds = []
+    if need_save:
+        save_json('nav_history.json', nav_cache)
+        save_json('funds.json', funds_config)
 
-        for name in target_funds:
-            info = funds_config[name]
-            code = FUND_CODES_MAP.get(name)
-            
-            # 检查该基金今天是否已更新
-            key_name = name
-            if key_name not in nav_cache: nav_cache[key_name] = {}
-            
-            if today_str in nav_cache[key_name]:
-                updated_count += 1
-                # 已经有数据了，不用重复打印，除非是刚抓到的（这里简单处理）
-                continue 
-            
-            # API 查询
-            nav_pct, date_str, t_nav = get_official_nav_pct(code)
-            
-            if date_str == today_str and nav_pct is not None:
-                # ！！！ 发现更新 ！！！
-                # Store PERCENTAGE to be compatible with app.py
-                nav_cache[key_name][date_str] = nav_pct
-                
-                # 如果配置了份额，根据最新净值更新持仓市值
-                if 'shares' in info and t_nav is not None:
-                    new_holding_value = info['shares'] * t_nav
-                    funds_config[name]['holding_value'] = round(new_holding_value, 2)
-                    print(f"   [市值更新] {name.split('(')[0]}: {info.get('holding_value',0)} -> {round(new_holding_value, 2)}")
-                
-                need_save = True
-                updated_count += 1
-                
-                updates_info.append({
-                    "name": name.split('(')[0],
-                    "pct": nav_pct
-                })
-                print(f"\n✅ {name.split('(')[0]} 已更新: {nav_pct:+.2f}%")
-            else:
-                missing_funds.append(name.split('(')[0])
+    updated_count = sum(1 for n in target_funds if today_str in nav_cache.get(n, {}))
+    missing_funds = [n.split('(')[0] for n in target_funds if today_str not in nav_cache.get(n, {})]
+    is_all_updated = (updated_count >= total_funds)
+    is_past_deadline = (bj_now.hour > DEADLINE_HOUR) or (bj_now.hour == DEADLINE_HOUR and bj_now.minute >= 0)
 
-        if need_save:
-            save_json('nav_history.json', nav_cache)
-            save_json('funds.json', funds_config)
+    if is_all_updated:
+        report_type = "all_done"
+        print("All NAVs updated, sending full report...")
+    elif is_past_deadline:
+        report_type = "partial"
+        print(f"Past {DEADLINE_HOUR}:00 deadline, sending partial report...")
+    else:
+        print(f"Incomplete ({updated_count}/{total_funds}), exiting. Next trigger in ~30 min.")
+        return
 
-        # 检查是否全部更新完毕 OR 超过截止时间
-        is_all_updated = (updated_count >= total_funds)
-        is_past_deadline = (bj_now.hour > deadline_hour) or (bj_now.hour == deadline_hour and bj_now.minute >= deadline_minute)
-        
-        if is_all_updated or is_past_deadline:
-            if is_all_updated:
-                print("\n🎉 所有基金净值已更新！准备发送报告...")
-                report_type = "全量更新"
-            else:
-                print(f"\n⚠️ 超过截止时间 ({deadline_hour}:{deadline_minute})，发送部分报告...")
-                report_type = "部分更新"
-            
-            # 生成报告
-            total_profit = 0
-            total_principal = 0
-            msg_lines = []
-            
-            for name, info in funds_config.items():
-                principal = info.get('holding_value', 0)
-                total_principal += principal
-                
-                # 找今天的涨幅
-                pct = 0
-                key_name = name
-                found_today = False
-                
-                if key_name in nav_cache and today_str in nav_cache[key_name]:
-                     # nav_cache stores PERCENTAGE now, so just use it
-                    pct = nav_cache[key_name][today_str]
-                    found_today = True
-                
-                # 计算收益 (如果还没更新，pct就是0，收益也是0，显示为“待更新”)
-                profit = principal * pct / 100
-                if found_today:
-                    total_profit += profit
-                    icon = "🔴" if pct > 0 else "🟢" if pct < 0 else "⚪"
-                    msg_lines.append(f"{icon} {name.split('(')[0]}: {pct:+.2f}% (¥{profit:+.0f})")
-                else:
-                    msg_lines.append(f"⏳ {name.split('(')[0]}: 待更新...")
+    total_profit = 0
+    total_principal = 0
+    msg_lines = []
 
-            yield_rate = (total_profit / total_principal * 100) if total_principal > 0 else 0
-            
-            # 标题区分
-            final_title = f"{report_type}: {total_profit:+.0f} ({yield_rate:+.2f}%)"
-            final_body = f"📅 {today_str} 净值 ({updated_count}/{total_funds})\n\n" + "\n".join(msg_lines)
-            
-            if not is_all_updated:
-                final_body += f"\n\n⚠️ 未更新: {', '.join(missing_funds)}"
-            
-            send_notification(final_title, final_body)
-            print("✅ 通知已发送，任务结束。")
-            break
-        
-        # 还没更完，休息一下再查
-        time.sleep(180) 
+    for name, info in funds_config.items():
+        principal = info.get('holding_value', 0)
+        total_principal += principal
+        pct = 0
+        found_today = False
+        if name in nav_cache and today_str in nav_cache[name]:
+            pct = nav_cache[name][today_str]
+            found_today = True
+        profit = principal * pct / 100
+        if found_today:
+            total_profit += profit
+            icon = "\U0001f534" if pct > 0 else "\U0001f7e2" if pct < 0 else "\u26aa"
+            msg_lines.append(f"{icon} {name.split('(')[0]}: {pct:+.2f}% (\u00a5{profit:+.0f})")
+        else:
+            msg_lines.append(f"\u23f3 {name.split('(')[0]}: \u5f85\u66f4\u65b0...")
+
+    yield_rate = (total_profit / total_principal * 100) if total_principal > 0 else 0
+    status_icon = "\u2705 \u5168\u91cf\u66f4\u65b0" if report_type == "all_done" else "\u26a0\ufe0f \u90e8\u5206\u66f4\u65b0"
+    final_title = f"{status_icon}: {total_profit:+.0f} ({yield_rate:+.2f}%)"
+    final_body = f"\U0001f4c5 {today_str} \u51c0\u503c ({updated_count}/{total_funds})\n\n" + "\n".join(msg_lines)
+    if not is_all_updated:
+        final_body += f"\n\n\u26a0\ufe0f \u672a\u66f4\u65b0: {', '.join(missing_funds)}"
+
+    send_notification(final_title, final_body)
+    save_json(NIGHTLY_STATUS_FILE, {"date": today_str, "sent": True})
+    print("Notification sent. Task complete.")
+
 
 if __name__ == "__main__":
     run_check()
