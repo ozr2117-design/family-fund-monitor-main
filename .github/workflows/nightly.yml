@@ -1,9 +1,10 @@
 name: Nightly Net Value Update
 
 on:
-  schedule:
-    - cron: '2 12 * * 1-5' # 12:02 UTC = 20:02 Beijing
-  workflow_dispatch:
+  # ✅ 已停用 GitHub 原生 cron（延迟严重，已改用 cron-job.org 在 20:01 精准触发）
+  # schedule:
+  #   - cron: '2 12 * * 1-5' # 12:02 UTC = 20:02 Beijing
+  workflow_dispatch:  # 由 cron-job.org 精准触发
 
 permissions:
   contents: write

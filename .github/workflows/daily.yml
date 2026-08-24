@@ -1,10 +1,11 @@
 name: Fund Sentinel (Daily Check)
 
 on:
-  schedule:
-    - cron: '47 6 * * 1-5' # 06:47 UTC = 14:47 Beijing (Signal Check)
-    - cron: '17 7 * * 1-5' # 07:17 UTC = 15:17 Beijing (Daily Report)
-  workflow_dispatch:
+  # ✅ 已停用 GitHub 原生 cron（延迟 15~60 分钟，已改用 cron-job.org 精准触发）
+  # schedule:
+  #   - cron: '47 6 * * 1-5' # 06:47 UTC = 14:47 Beijing (Signal Check)
+  #   - cron: '17 7 * * 1-5' # 07:17 UTC = 15:17 Beijing (Daily Report)
+  workflow_dispatch:  # 由 cron-job.org 精准触发
 
 # 🔥 核心变化1：赋予写入仓库的权限
 permissions:
