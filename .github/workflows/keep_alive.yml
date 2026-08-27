@@ -1,16 +1,27 @@
-name: Prevent Streamlit Sleep (Keep Alive)
+﻿name: Prevent Streamlit Sleep (Keep Alive)
 
 on:
-  schedule:
-    # 北京时间 07:02 = 23:02 UTC (Previous Day)
-    - cron: '2 23 * * *'
-    # 北京时间 18:02 = 10:02 UTC
-    - cron: '2 10 * * *'
-  workflow_dispatch:
+  workflow_dispatch:  # 由 cron-job.org 精准调度触发
+
+permissions:
+  contents: read
 
 jobs:
   wake_up:
     runs-on: ubuntu-latest
     steps:
-      - name: Wake up App
-        run: curl -L --cookie-jar cookie.txt --cookie cookie.txt -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" https://family-fund-monitor-1.streamlit.app/
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Playwright & Dependencies
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+
+      - name: Run Wakeup Script
+        run: python wake_streamlit.py "https://family-fund-monitor-1.streamlit.app/"
