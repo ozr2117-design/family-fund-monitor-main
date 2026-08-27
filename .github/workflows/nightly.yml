@@ -36,6 +36,6 @@ jobs:
         run: |
           git config --global user.name "FundBot"
           git config --global user.email "bot@github.com"
-          git add nav_history.json nightly_status.json funds.json
-          git commit -m "🌙 Update NAV history & nightly status" || echo "No changes to commit"
+          git add nav_history.json nightly_status.json funds.json factor_history.json history.json
+          git commit -m "🌙 Update NAV history, factors & nightly status" || echo "No changes to commit"
           git push

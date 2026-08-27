@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 sys.stdout.reconfigure(encoding='utf-8')
 
 # ==========================================
-# Configuration
+# ⚙️ 配置区
 # ==========================================
 def load_secrets():
     bark = os.getenv("BARK_KEY")
@@ -27,18 +27,18 @@ def load_secrets():
 BARK_KEY, PUSHPLUS_TOKEN = load_secrets()
 
 FUND_CODES_MAP = {
-    '\u8d22\u901a\u5468\u671f\u4f18\u9009\u6df7\u5408C (025547)': '025547',
-    '\u8d22\u901a\u79d1\u6280\u521b\u65b0\u6df7\u5408C (008984)': '008984',
-    '\u8def\u535a\u8fc8\u4e2d\u56fd\u52a8\u529b\u80a1\u7968C (020237)': '020237',
-    '\u6469\u6839\u5747\u8861\u7cbe\u9009\u6df7\u5408A (021273)': '021273',
-    '\u534e\u5b89\u54c1\u8d28\u7504\u9009\u6df7\u5408A (013680)': '013680'
+    '财通周期优选混合C (025547)': '025547',
+    '财通科技创新混合C (008984)': '008984',
+    '路博迈中国动力股票C (020237)': '020237',
+    '摩根均衡精选混合A (021273)': '021273',
+    '华安品质甄选混合A (013680)': '013680'
 }
 
 NIGHTLY_STATUS_FILE = "nightly_status.json"
 DEADLINE_HOUR = 22
 
 # ==========================================
-# Utility functions
+# 🛠️ 工具函数
 # ==========================================
 def load_json(filename):
     if os.path.exists(filename):
@@ -82,6 +82,33 @@ def get_official_nav_pct(fund_code):
         print(f"Error fetching {fund_code}: {e}")
     return None, None, None
 
+def calculate_adaptive_factor(current_factor, raw_est, actual_pct):
+    """
+    自适应抗噪 EMA+ 因子校准算法（针对中国公募基金定制）：
+    1. 震荡日过滤 (abs(raw_est) < 0.2% 时信噪比极低，跳过校准保持原值)
+    2. 同向 EMA 学习率平滑，单日最大比值截断 [0.5, 2.0]
+    3. 反向异动阻尼回归 1.0 (防止负数或极端调仓爆炸)
+    4. 物理边界 Clamp [0.65, 1.35]
+    """
+    if raw_est is None or abs(raw_est) < 0.2:
+        return current_factor, "震荡保持"
+    
+    ratio = actual_pct / raw_est
+    
+    if ratio > 0:
+        # 同向：限制单日比值倍数，避免单日极端噪音带偏
+        clamped_ratio = max(0.5, min(2.0, ratio))
+        # EMA: 80% 历史记忆 + 20% 今日观测
+        new_factor = (current_factor * 0.8) + (clamped_ratio * 0.2)
+        audit_tag = f"EMA(R={ratio:.2f})"
+    else:
+        # 反向：可能由于大额分红或剧烈调仓导致，采用阻尼向 1.0 靠拢
+        new_factor = (current_factor * 0.9) + (1.0 * 0.1)
+        audit_tag = "阻尼回归"
+        
+    final_factor = max(0.65, min(1.35, round(new_factor, 4)))
+    return final_factor, audit_tag
+
 def send_notification(title, content):
     print(f"[MSG] Sending: {title}")
     if BARK_KEY:
@@ -105,7 +132,7 @@ def send_notification(title, content):
 # Triggered by cron-job.org every 30 mins
 # ==========================================
 def run_check():
-    print("Nightly Check Started (Single-run mode)...")
+    print("🌙 Nightly Check Started (Single-run mode)...")
 
     funds_config = load_json('funds.json')
     nav_cache = load_json('nav_history.json')
@@ -160,6 +187,34 @@ def run_check():
         print(f"Incomplete ({updated_count}/{total_funds}), exiting. Next trigger in ~30 min.")
         return
 
+    # ── 🤖 执行 EMA+ 因子自动审计 ────────────────────────
+    history = load_json('history.json')
+    factor_history = load_json('factor_history.json')
+    if today_str not in factor_history:
+        factor_history[today_str] = {}
+        
+    factor_audit_logs = []
+    for name in target_funds:
+        if today_str in nav_cache.get(name, {}):
+            actual_pct = nav_cache[name][today_str]
+            raw_est = history.get(today_str, {}).get(name)
+            current_f = funds_config[name].get('factor', 1.0)
+            
+            new_f, audit_tag = calculate_adaptive_factor(current_f, raw_est, actual_pct)
+            funds_config[name]['factor'] = new_f
+            factor_history[today_str][name] = new_f
+            
+            short_n = name.split('(')[0]
+            if new_f != current_f:
+                factor_audit_logs.append(f"⚖️ {short_n}: {current_f:.3f}→{new_f:.3f} ({audit_tag})")
+            else:
+                factor_audit_logs.append(f"⚖️ {short_n}: {current_f:.3f} ({audit_tag})")
+
+    save_json('factor_history.json', factor_history)
+    save_json('funds.json', funds_config)
+    print("✅ EMA+ 因子自适应审计完成并已存盘")
+
+    # ── 生成报告 ─────────────────────────────────────────
     total_profit = 0
     total_principal = 0
     msg_lines = []
@@ -175,17 +230,21 @@ def run_check():
         profit = principal * pct / 100
         if found_today:
             total_profit += profit
-            icon = "\U0001f534" if pct > 0 else "\U0001f7e2" if pct < 0 else "\u26aa"
-            msg_lines.append(f"{icon} {name.split('(')[0]}: {pct:+.2f}% (\u00a5{profit:+.0f})")
+            icon = "🔴" if pct > 0 else "🟢" if pct < 0 else "⚪"
+            msg_lines.append(f"{icon} {name.split('(')[0]}: {pct:+.2f}% (¥{profit:+.0f})")
         else:
-            msg_lines.append(f"\u23f3 {name.split('(')[0]}: \u5f85\u66f4\u65b0...")
+            msg_lines.append(f"⏳ {name.split('(')[0]}: 待更新...")
 
     yield_rate = (total_profit / total_principal * 100) if total_principal > 0 else 0
-    status_icon = "\u2705 \u5168\u91cf\u66f4\u65b0" if report_type == "all_done" else "\u26a0\ufe0f \u90e8\u5206\u66f4\u65b0"
+    status_icon = "✅ 全量更新" if report_type == "all_done" else "⚠️ 部分更新"
     final_title = f"{status_icon}: {total_profit:+.0f} ({yield_rate:+.2f}%)"
-    final_body = f"\U0001f4c5 {today_str} \u51c0\u503c ({updated_count}/{total_funds})\n\n" + "\n".join(msg_lines)
+    
+    final_body = f"📅 {today_str} 净值 ({updated_count}/{total_funds})\n\n" + "\n".join(msg_lines)
     if not is_all_updated:
-        final_body += f"\n\n\u26a0\ufe0f \u672a\u66f4\u65b0: {', '.join(missing_funds)}"
+        final_body += f"\n\n⚠️ 未更新: {', '.join(missing_funds)}"
+        
+    if factor_audit_logs:
+        final_body += "\n\n🤖 估值因子已自动校准:\n" + "\n".join(factor_audit_logs)
 
     send_notification(final_title, final_body)
     save_json(NIGHTLY_STATUS_FILE, {"date": today_str, "sent": True})

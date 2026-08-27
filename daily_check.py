@@ -1,4 +1,4 @@
-import requests
+﻿import requests
 import json
 import os
 from datetime import datetime, timedelta
@@ -8,11 +8,9 @@ import time
 # ⚙️ 配置区 (安全升级版)
 # ==========================================
 def load_secrets():
-    # 1. 尝试从环境变量读取 (GitHub Secrets)
     bark = os.getenv("BARK_KEY")
     pp = os.getenv("PUSHPLUS_TOKEN")
     
-    # 2. 尝试从本地文件读取
     if not bark or not pp:
         try:
             if os.path.exists('secrets.json'):
@@ -74,7 +72,7 @@ def get_benchmark_pct(fund_name, market_data):
     code = 'sz399006' if any(k in fund_name for k in ["成长", "AI", "优选"]) else 'sh000001'
     return market_data.get(code, 0)
 
-# 🔥 新增：写日记功能
+# 🔥 写日记功能
 def append_to_log(log_entries):
     if not log_entries: return
     
@@ -82,28 +80,23 @@ def append_to_log(log_entries):
     new_lines = []
     
     for entry in log_entries:
-        # 格式: | 日期 | 基金 | 信号 | 详情 | 操作 |
         line = f"| {today} | {entry['name']} | {entry['type']} | {entry['detail']} | {entry['action']} |"
         new_lines.append(line)
         
     try:
-        # 读取现有内容
         LOG_FILE = "signals.md"
         with open(LOG_FILE, 'r', encoding='utf-8') as f:
             lines = f.readlines()
             
-        # 在表头(第2行)下面插入新内容，这样最新的在最上面
         insert_idx = 2
         for i, line in enumerate(lines):
             if "|---" in line:
                 insert_idx = i + 1
                 break
                 
-        # 插入
         for line in reversed(new_lines):
             lines.insert(insert_idx, line + "\n")
             
-        # 写入
         with open(LOG_FILE, 'w', encoding='utf-8') as f:
             f.writelines(lines)
         print("✅ 日记写入成功")
@@ -117,23 +110,20 @@ def send_message(title, content):
     """统一发送通知 (Bark + PushPlus)"""
     print(f"[MSG] 准备发送通知: {title}")
     
-    # 1. Push Bark
     if BARK_KEY:
         try:
-            # 兼容完整URL或纯Key
             base_url = BARK_KEY if BARK_KEY.startswith("http") else f"https://api.day.app/{BARK_KEY}/"
             clean_url = base_url.rstrip('/')
             requests.get(f"{clean_url}/{title}/{content}?group=fund", timeout=10)
         except: pass
     
-    # 2. Push PushPlus
     if PUSHPLUS_TOKEN and len(PUSHPLUS_TOKEN) > 5:
         try:
             pp_url = "http://www.pushplus.plus/send"
             pp_data = {
                 "token": PUSHPLUS_TOKEN,
                 "title": title,
-                "content": content.replace("\n", "<br>"), # HTML换行
+                "content": content.replace("\n", "<br>"),
                 "template": "html"
             }
             requests.post(pp_url, json=pp_data, timeout=10)
@@ -159,14 +149,15 @@ def main():
     if not market_data: return
 
     messages = []
-    log_entries = [] # 专门用于写日记的数据结构
+    log_entries = []
     
-    # GitHub Action 跑在 UTC，需+8小时转为北京时间
+    # 统一北京时间
     bj_time = datetime.utcnow() + timedelta(hours=8)
     now = bj_time
+    today_date = now.strftime('%Y-%m-%d')
     
     report_lines = []
-    total_est_profit = 0
+    raw_snapshots = {}
     
     for name, info in funds.items():
         factor = info.get('factor', 1.0)
@@ -176,19 +167,17 @@ def main():
             if s['code'] in market_data:
                 val += market_data[s['code']] * s['weight']; w += s['weight']
         
-        est = (val / w * factor) if w > 0 else 0
+        raw_val = (val / w) if w > 0 else 0
+        raw_snapshots[name] = round(raw_val, 4)
+        est = raw_val * factor
         bench_val = get_benchmark_pct(name, market_data)
         short_name = name.split('(')[0]
 
-        # 收集报告数据 (无论是否触发信号)
+        # 收集报告数据
         icon = "🔴" if est > 0 else "🟢" if est < 0 else "⚪"
         report_lines.append(f"{icon} {short_name}: {est:+.2f}%")
 
         # 信号判断
-        signal_type = None
-        detail = ""
-        action = ""
-        
         # 1. 买入
         if est < -2.5 and est < bench_val:
             multiplier = 2 if est < -4.0 else 1
@@ -196,7 +185,6 @@ def main():
             msg = f"🟢【机会】{short_name} {est:.2f}%\n📉 跑输基准 {abs(est-bench_val):.1f}%\n👉 建议加仓 ¥{buy_amt:,}"
             messages.append(msg)
             
-            # 记录日志数据
             log_entries.append({
                 "name": short_name,
                 "type": "🟢 买入机会",
@@ -216,23 +204,16 @@ def main():
                 "action": "卖出 1/4"
             })
 
-    # ---------------------------
-    # 📢 1. 发送交易信号 (优先级最高)
-    # ---------------------------
+    # 📢 1. 发送交易信号
     if messages:
         final_body = "\n\n".join(messages)
         send_message("基金信号提醒", final_body)
         print("✅ 交易信号已推送")
-        
-        # 写日记
         append_to_log(log_entries)
     else:
         print("今日无交易信号")
 
-    today_date = now.strftime('%Y-%m-%d')
     report_status_file = "report_status.json"
-    
-    # 读取报告发送状态
     report_sent = False
     try:
         if os.path.exists(report_status_file):
@@ -242,13 +223,9 @@ def main():
                     report_sent = True
     except: pass
 
-    # 🕒 收盘估值报告逻辑优化
-    # 只要是 15:00 之后，且今天还没发过，就发送 (不再限制 16:30 截止，防止 GitHub Action 延迟)
     is_report_time = (now.hour >= 15)
     
-    # ---------------------------
-    # 📢 2. 发送收盘估值报告
-    # ---------------------------
+    # 📢 2. 发送收盘估值报告 & 自动存证供晚间 EMA 审计
     if is_report_time and not report_sent:
         print("[REPORT] 正在生成收盘估值报告...")
         title = f"收盘估值播报 {datetime.now().strftime('%H:%M')}"
@@ -262,6 +239,19 @@ def main():
                 json.dump({"date": today_date, "sent": True}, f)
         except Exception as e:
             print(f"❌ 记录报告状态失败: {e}")
+
+        # ✅ 自动存入收盘原始估算快照到 history.json (供晚间 EMA 审计)
+        try:
+            history_data = {}
+            if os.path.exists('history.json'):
+                with open('history.json', 'r', encoding='utf-8') as f:
+                    history_data = json.load(f)
+            history_data[today_date] = raw_snapshots
+            with open('history.json', 'w', encoding='utf-8') as f:
+                json.dump(history_data, f, indent=4, ensure_ascii=False)
+            print("✅ 每日收盘原始估算快照已存入 history.json")
+        except Exception as e:
+            print(f"❌ 记录 history.json 失败: {e}")
 
     elif report_sent:
         print(f"今日 ({today_date}) 收盘报告已发送，跳过。")

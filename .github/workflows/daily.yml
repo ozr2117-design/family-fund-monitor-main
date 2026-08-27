@@ -38,7 +38,7 @@ jobs:
         run: |
           git config --global user.name "FundBot"
           git config --global user.email "bot@github.com"
-          git add signals.md report_status.json
+          git add signals.md report_status.json history.json
           # 只有当文件有变化时才提交，否则不报错
-          git commit -m "📝 Update signal log & status" || echo "No changes to commit"
+          git commit -m "📝 Update signal log, status & history snapshot" || echo "No changes to commit"
           git push
