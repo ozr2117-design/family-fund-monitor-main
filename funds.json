@@ -1,7 +1,7 @@
 {
     "财通周期优选混合C (025547)": {
         "factor": 0.9,
-        "holding_value": 70422.48,
+        "holding_value": 71801.15,
         "base_unit": 10000.0,
         "holdings": [
             {
@@ -59,7 +59,7 @@
     },
     "财通科技创新混合C (008984)": {
         "factor": 0.9581,
-        "holding_value": 17133.47,
+        "holding_value": 17064.97,
         "base_unit": 10000.0,
         "holdings": [
             {
@@ -175,7 +175,7 @@
     },
     "摩根均衡精选混合A (021273)": {
         "factor": 0.9176,
-        "holding_value": 290412.1,
+        "holding_value": 288898.54,
         "base_unit": 10000.0,
         "holdings": [
             {
@@ -233,7 +233,7 @@
     },
     "华安品质甄选混合A (013680)": {
         "factor": 0.9,
-        "holding_value": 78563.47,
+        "holding_value": 79335.16,
         "base_unit": 10000.0,
         "holdings": [
             {
