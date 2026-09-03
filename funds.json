@@ -116,8 +116,8 @@
         "shares": 9255.83
     },
     "路博迈中国动力股票C (020237)": {
-        "factor": 0.9364,
-        "holding_value": 83128.92,
+        "factor": 0.8491,
+        "holding_value": 83304.14,
         "base_unit": 10000.0,
         "holdings": [
             {
@@ -174,7 +174,7 @@
         "shares": 56519.53
     },
     "摩根均衡精选混合A (021273)": {
-        "factor": 0.9286,
+        "factor": 0.8563,
         "holding_value": 284208.63,
         "base_unit": 10000.0,
         "holdings": [
@@ -232,7 +232,7 @@
         "shares": 213177.79
     },
     "华安品质甄选混合A (013680)": {
-        "factor": 0.7831,
+        "factor": 0.732,
         "holding_value": 77386.48,
         "base_unit": 10000.0,
         "holdings": [
