@@ -58,7 +58,7 @@
         "shares": 85102.7
     },
     "财通科技创新混合C (008984)": {
-        "factor": 0.8628,
+        "factor": 0.8062,
         "holding_value": 16986.3,
         "base_unit": 10000.0,
         "holdings": [
@@ -174,7 +174,7 @@
         "shares": 113016.71
     },
     "摩根均衡精选混合A (021273)": {
-        "factor": 0.8263,
+        "factor": 0.761,
         "holding_value": 258563.34,
         "base_unit": 10000.0,
         "holdings": [
