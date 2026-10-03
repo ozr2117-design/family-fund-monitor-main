@@ -1,4 +1,4 @@
-﻿import requests
+import requests
 import json
 import os
 from datetime import datetime, timedelta
@@ -31,7 +31,7 @@ def load_funds():
     except: return {}
 
 def get_realtime_price(stock_codes):
-    if not stock_codes: return {}
+    if not stock_codes: return {}, None
     url = f"http://qt.gtimg.cn/q={','.join(stock_codes)}"
     
     headers = {
@@ -46,19 +46,26 @@ def get_realtime_price(stock_codes):
                 continue
 
             price_data = {}
+            market_date = None
             parts = r.text.split(';')
             for part in parts:
                 if '="' in part:
                     try:
                         code = part.split('=')[0].split('_')[-1]
                         data = part.split('="')[1].split('~')
-                        if len(data) > 4:
+                        if len(data) > 30:
+                            # 尝试获取行情日期 (如 20261003150000 -> 20261003)
+                            # 以大盘 sh000001 作为基准
+                            if code == '000001' and not market_date:
+                                date_str = data[30]
+                                if len(date_str) >= 8 and date_str.startswith('202'):
+                                    market_date = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}"
                             close = float(data[4])
                             if close > 0:
                                 price_data[code] = ((float(data[3]) - close) / close) * 100
                     except: continue
             
-            if price_data: return price_data
+            if price_data: return price_data, market_date
             else: print("⚠️ 获取到的行情数据为空")
             
         except Exception as e:
@@ -66,7 +73,7 @@ def get_realtime_price(stock_codes):
             time.sleep(2)
             
     print("❌ 多次重试失败，无法获取行情数据")
-    return {}
+    return {}, None
 
 def get_benchmark_pct(fund_name, market_data):
     code = 'sz399006' if any(k in fund_name for k in ["成长", "AI", "优选"]) else 'sh000001'
@@ -145,16 +152,34 @@ def main():
     for f in funds.values():
         for s in f['holdings']: all_codes.append(s['code'])
     
-    market_data = get_realtime_price(list(set(all_codes)))
+    market_data, market_date = get_realtime_price(list(set(all_codes)))
     if not market_data: return
 
-    messages = []
-    log_entries = []
-    
     # 统一北京时间
     bj_time = datetime.utcnow() + timedelta(hours=8)
     now = bj_time
     today_date = now.strftime('%Y-%m-%d')
+    
+    if market_date and market_date != today_date:
+        print(f"[SKIP] 行情日期为 {market_date}，而今天是 {today_date}，说明当前非A股交易时间，停止播报。")
+        return
+
+    messages = []
+    log_entries = []
+    
+    # 获取并处理阶梯预警状态
+    signal_status_file = "signal_status.json"
+    signal_status = {"date": today_date, "funds": {}}
+    if os.path.exists(signal_status_file):
+        try:
+            with open(signal_status_file, 'r', encoding='utf-8') as f:
+                saved_status = json.load(f)
+                if saved_status.get("date") == today_date:
+                    signal_status = saved_status
+        except: pass
+        
+    BUY_THRESHOLDS = [-2.5, -3.5, -4.5, -5.5]
+    SELL_THRESHOLDS = [3.0, 4.0, 5.0, 6.0]
     
     report_lines = []
     raw_snapshots = {}
@@ -178,31 +203,53 @@ def main():
         report_lines.append(f"{icon} {short_name}: {est:+.2f}%")
 
         # 信号判断
-        # 1. 买入
-        if est < -2.5 and est < bench_val:
-            multiplier = 2 if est < -4.0 else 1
-            buy_amt = base_unit * multiplier
-            msg = f"🟢【机会】{short_name} {est:.2f}%\n📉 跑输基准 {abs(est-bench_val):.1f}%\n👉 建议加仓 ¥{buy_amt:,}"
-            messages.append(msg)
+        fund_status = signal_status["funds"].setdefault(name, {"buy_level": 0, "sell_level": 0})
+        
+        # 1. 买入阶梯
+        if est < BUY_THRESHOLDS[0] and est < bench_val:
+            current_buy_level = 0
+            for i, threshold in enumerate(BUY_THRESHOLDS):
+                if est <= threshold:
+                    current_buy_level = i + 1
             
-            log_entries.append({
-                "name": short_name,
-                "type": "🟢 买入机会",
-                "detail": f"估值 {est:.2f}% (跑输 {abs(est-bench_val):.1f}%)",
-                "action": f"买入 ¥{buy_amt:,}"
-            })
+            if current_buy_level > fund_status["buy_level"]:
+                fund_status["buy_level"] = current_buy_level
+                multiplier = 2 if est < -4.0 else 1
+                buy_amt = base_unit * multiplier
+                msg = f"🟢【机会 - 阶梯{current_buy_level}】{short_name} {est:.2f}%\n📉 跑输基准 {abs(est-bench_val):.1f}%\n👉 建议加仓 ¥{buy_amt:,}"
+                messages.append(msg)
+                
+                log_entries.append({
+                    "name": short_name,
+                    "type": f"🟢 买入机会(阶梯{current_buy_level})",
+                    "detail": f"估值 {est:.2f}% (跑输 {abs(est-bench_val):.1f}%)",
+                    "action": f"买入 ¥{buy_amt:,}"
+                })
 
-        # 2. 卖出
-        elif est > 3.0 and est > (bench_val + 1.5):
-            msg = f"🔴【止盈】{short_name} +{est:.2f}%\n🔥 跑赢基准 {abs(est-bench_val):.1f}%\n👉 建议卖出 1/4"
-            messages.append(msg)
+        # 2. 卖出阶梯
+        elif est > SELL_THRESHOLDS[0] and est > (bench_val + 1.5):
+            current_sell_level = 0
+            for i, threshold in enumerate(SELL_THRESHOLDS):
+                if est >= threshold:
+                    current_sell_level = i + 1
             
-            log_entries.append({
-                "name": short_name,
-                "type": "🔴 止盈提醒",
-                "detail": f"估值 +{est:.2f}% (跑赢 {abs(est-bench_val):.1f}%)",
-                "action": "卖出 1/4"
-            })
+            if current_sell_level > fund_status["sell_level"]:
+                fund_status["sell_level"] = current_sell_level
+                msg = f"🔴【止盈 - 阶梯{current_sell_level}】{short_name} +{est:.2f}%\n🔥 跑赢基准 {abs(est-bench_val):.1f}%\n👉 建议卖出 1/4"
+                messages.append(msg)
+                
+                log_entries.append({
+                    "name": short_name,
+                    "type": f"🔴 止盈提醒(阶梯{current_sell_level})",
+                    "detail": f"估值 +{est:.2f}% (跑赢 {abs(est-bench_val):.1f}%)",
+                    "action": "卖出 1/4"
+                })
+
+    # 保存信号状态
+    try:
+        with open(signal_status_file, 'w', encoding='utf-8') as f:
+            json.dump(signal_status, f, ensure_ascii=False, indent=4)
+    except: pass
 
     # 📢 1. 发送交易信号
     if messages:
