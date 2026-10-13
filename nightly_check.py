@@ -1,4 +1,4 @@
-﻿import requests
+import requests
 import time
 import json
 import os
@@ -242,6 +242,42 @@ def run_check():
     final_body = f"📅 {today_str} 净值 ({updated_count}/{total_funds})\n\n" + "\n".join(msg_lines)
     if not is_all_updated:
         final_body += f"\n\n⚠️ 未更新: {', '.join(missing_funds)}"
+
+    # ── 📊 预估 vs 实盘对比 ───────────────────────────────
+    today_est_snapshot = history.get(today_str, {})
+    if today_est_snapshot:
+        diff_lines = []
+        abs_errors = []
+        for name in target_funds:
+            if today_str not in nav_cache.get(name, {}):
+                continue
+            actual = nav_cache[name][today_str]
+            # history 存的是已乘 factor 后的 est（即 raw_val * factor）
+            est = today_est_snapshot.get(name)
+            if est is None:
+                continue
+            diff = actual - est
+            abs_errors.append(abs(diff))
+            short_n = name.split('(')[0]
+            dir_icon = "✅" if abs(diff) <= 0.3 else ("⚠️" if abs(diff) <= 0.8 else "❌")
+            diff_sign = "+" if diff >= 0 else ""
+            diff_lines.append(
+                f"{dir_icon} {short_n}\n"
+                f"   预估 {est:+.2f}%  实盘 {actual:+.2f}%  差 {diff_sign}{diff:.2f}%"
+            )
+        if diff_lines:
+            avg_err = sum(abs_errors) / len(abs_errors)
+            if avg_err <= 0.3:
+                grade = "🎯 优秀 (≤0.3%)"
+            elif avg_err <= 0.8:
+                grade = "📐 良好 (≤0.8%)"
+            else:
+                grade = "🔧 待优化 (>0.8%)"
+            final_body += (
+                "\n\n📊 今日预估精度报告:\n"
+                + "\n".join(diff_lines)
+                + f"\n\n平均误差 {avg_err:.2f}%  {grade}"
+            )
         
     if factor_audit_logs:
         final_body += "\n\n🤖 估值因子已自动校准:\n" + "\n".join(factor_audit_logs)
