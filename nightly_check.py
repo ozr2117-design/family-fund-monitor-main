@@ -238,13 +238,31 @@ def run_check():
     yield_rate = (total_profit / total_principal * 100) if total_principal > 0 else 0
     status_icon = "✅ 全量更新" if report_type == "all_done" else "⚠️ 部分更新"
     final_title = f"{status_icon}: {total_profit:+.0f} ({yield_rate:+.2f}%)"
-    
-    final_body = f"📅 {today_str} 净值 ({updated_count}/{total_funds})\n\n" + "\n".join(msg_lines)
+
+    # 计算今日预测盈亏（来自收盘时 history.json 快照）
+    today_est_snapshot = history.get(today_str, {})
+    est_total_profit = 0.0
+    for name, info in funds_config.items():
+        est = today_est_snapshot.get(name)
+        if est is not None:
+            est_total_profit += info.get('holding_value', 0) * est / 100
+    est_sign = "+" if est_total_profit >= 0 else ""
+    actual_sign = "+" if total_profit >= 0 else ""
+    diff_total = total_profit - est_total_profit
+    diff_sign = "+" if diff_total >= 0 else ""
+
+    summary_block = (
+        f"📊 今日盈亏汇总\n"
+        f"  预测: {est_sign}¥{est_total_profit:,.0f}\n"
+        f"  实盘: {actual_sign}¥{total_profit:,.0f}\n"
+        f"  差额: {diff_sign}¥{diff_total:,.0f}"
+    )
+
+    final_body = f"📅 {today_str} 净值 ({updated_count}/{total_funds})\n\n{summary_block}\n\n" + "\n".join(msg_lines)
     if not is_all_updated:
         final_body += f"\n\n⚠️ 未更新: {', '.join(missing_funds)}"
 
     # ── 📊 预估 vs 实盘对比 ───────────────────────────────
-    today_est_snapshot = history.get(today_str, {})
     if today_est_snapshot:
         diff_lines = []
         abs_errors = []
