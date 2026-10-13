@@ -276,7 +276,34 @@ def main():
     if is_report_time and not report_sent:
         print("[REPORT] 正在生成收盘估值报告...")
         title = f"收盘估值播报 {datetime.now().strftime('%H:%M')}"
-        body = f"📅 {today_date}\n\n" + "\n".join(report_lines)
+        
+        # 构建详细盈亏报告
+        detail_lines = []
+        total_pnl = 0.0
+        total_value = 0.0
+        for name, info in funds.items():
+            factor = info.get('factor', 1.0)
+            base_unit = info.get('base_unit', 1000)
+            val = 0; w = 0
+            for s in info['holdings']:
+                if s['code'] in market_data:
+                    val += market_data[s['code']] * s['weight']; w += s['weight']
+            raw_val = (val / w) if w > 0 else 0
+            est = raw_val * factor
+            holding_value = info.get('holding_value', 0)
+            pnl = holding_value * est / 100  # 当日预估盈亏（元）
+            total_pnl += pnl
+            total_value += holding_value
+            short_name = name.split('(')[0]
+            icon = "🔴" if est > 0 else "🟢" if est < 0 else "⚪"
+            pnl_sign = "+" if pnl >= 0 else ""
+            detail_lines.append(f"{icon} {short_name}\n   {est:+.2f}%  {pnl_sign}¥{pnl:,.0f}")
+        
+        total_sign = "+" if total_pnl >= 0 else ""
+        total_icon = "🔺" if total_pnl > 0 else "🔻" if total_pnl < 0 else "➖"
+        summary = f"{total_icon} 今日总盈亏：{total_sign}¥{total_pnl:,.0f}"
+        
+        body = f"📅 {today_date}\n\n" + "\n\n".join(detail_lines) + f"\n\n{'─'*20}\n{summary}"
         send_message(title, body)
         print("[OK] 估值报告已推送")
         
