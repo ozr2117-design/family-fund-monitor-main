@@ -2,11 +2,11 @@
     "date": "2026-10-26",
     "funds": {
         "财通周期优选混合C (025547)": {
-            "buy_level": 1,
+            "buy_level": 2,
             "sell_level": 0
         },
         "财通科技创新混合C (008984)": {
-            "buy_level": 3,
+            "buy_level": 4,
             "sell_level": 0
         },
         "路博迈中国动力股票C (020237)": {
