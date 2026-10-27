@@ -243,8 +243,10 @@ def run_check():
     today_est_snapshot = history.get(today_str, {})
     est_total_profit = 0.0
     for name, info in funds_config.items():
-        est = today_est_snapshot.get(name)
-        if est is not None:
+        raw_est = today_est_snapshot.get(name)
+        if raw_est is not None:
+            f = info.get('factor', 1.0)
+            est = raw_est * f
             est_total_profit += info.get('holding_value', 0) * est / 100
     est_sign = "+" if est_total_profit >= 0 else ""
     actual_sign = "+" if total_profit >= 0 else ""
@@ -270,10 +272,11 @@ def run_check():
             if today_str not in nav_cache.get(name, {}):
                 continue
             actual = nav_cache[name][today_str]
-            # history 存的是已乘 factor 后的 est（即 raw_val * factor）
-            est = today_est_snapshot.get(name)
-            if est is None:
+            raw_est = today_est_snapshot.get(name)
+            if raw_est is None:
                 continue
+            f = funds_config[name].get('factor', 1.0)
+            est = raw_est * f
             diff = actual - est
             abs_errors.append(abs(diff))
             short_n = name.split('(')[0]

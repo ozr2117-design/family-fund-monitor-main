@@ -1,8 +1,13 @@
 import requests
 import json
 import os
+import sys
 from datetime import datetime, timedelta
 import time
+
+# Force UTF-8 output for Windows terminals
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # ==========================================
 # ⚙️ 配置区 (安全升级版)
