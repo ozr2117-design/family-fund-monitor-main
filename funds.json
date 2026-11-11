@@ -1,6 +1,6 @@
 {
     "财通周期优选混合C (025547)": {
-        "factor": 0.9757,
+        "factor": 1.0246,
         "holding_value": 50482.92,
         "base_unit": 10000.0,
         "holdings": [
@@ -58,7 +58,7 @@
         "shares": 85102.7
     },
     "财通科技创新混合C (008984)": {
-        "factor": 0.7825,
+        "factor": 0.726,
         "holding_value": 12176.97,
         "base_unit": 10000.0,
         "holdings": [
@@ -116,8 +116,8 @@
         "shares": 9255.83
     },
     "路博迈中国动力股票C (020237)": {
-        "factor": 0.9961,
-        "holding_value": 128522.6,
+        "factor": 0.8969,
+        "holding_value": 130534.3,
         "base_unit": 10000.0,
         "holdings": [
             {
@@ -174,7 +174,7 @@
         "shares": 113016.71
     },
     "摩根均衡精选混合A (021273)": {
-        "factor": 0.65,
+        "factor": 0.7235,
         "holding_value": 252509.09,
         "base_unit": 10000.0,
         "holdings": [
@@ -232,7 +232,7 @@
         "shares": 213177.79
     },
     "华安品质甄选混合A (013680)": {
-        "factor": 0.6745,
+        "factor": 0.65,
         "holding_value": 129960.25,
         "base_unit": 10000.0,
         "holdings": [
